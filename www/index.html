@@ -5,13 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Camarão Tycoon</title>
 <style>
-:root{--bg:#fff7ee;--card:#ffffff;--tx:#3a2418;--mu:#8a6a58;--ac:#ff6b4a;--ac2:#ffb199;--ok:#2e9e6a;--bd:#f0d9c8;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1410;--card:#2a1d17;--tx:#fbe9dc;--mu:#b89885;--ac:#ff7a5a;--ac2:#6b3326;--ok:#4cc58a;--bd:#43302580;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#1d1410;--card:#2a1d17;--tx:#fbe9dc;--mu:#b89885;--ac:#ff7a5a;--ac2:#6b3326;--ok:#4cc58a;--bd:#433025;color-scheme:dark}
+:root{--bg:#fff7ee;--card:#ffffff;--tx:#3a2418;--mu:#8a6a58;--ac:#ff6b4a;--ac2:#ffb199;--ok:#2e9e6a;--bd:#f0d9c8;--glass:#ffffffc7;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1410;--card:#2a1d17;--tx:#fbe9dc;--mu:#b89885;--ac:#ff7a5a;--ac2:#6b3326;--ok:#4cc58a;--bd:#43302580;--glass:#1d1410b8;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1d1410;--card:#2a1d17;--tx:#fbe9dc;--mu:#b89885;--ac:#ff7a5a;--ac2:#6b3326;--ok:#4cc58a;--bd:#433025;--glass:#1d1410b8;color-scheme:dark}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
-html,body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+html{background:var(--bg)}
+html,body{margin:0;min-height:100%;color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
 body{max-width:520px;margin:0 auto;padding:12px}
-.top{text-align:center}
+.top{text-align:center;background:var(--glass);border-radius:14px;padding:8px;backdrop-filter:blur(3px);position:relative}
+#bg{position:fixed;inset:0;z-index:-1}
 .stage{font-size:13px;color:var(--mu)}
 .money{font-size:32px;font-weight:800}
 .ps{font-size:13px;color:var(--mu)}
@@ -32,12 +34,25 @@ body{max-width:520px;margin:0 auto;padding:12px}
 .bar{height:8px;background:var(--bd);border-radius:6px;overflow:hidden;margin:6px 0}
 .bar i{display:block;height:100%;background:var(--ac);width:0}
 .boost{color:var(--ac);font-weight:700;font-size:13px;text-align:center;min-height:18px}
-.rs{font-size:12px;color:var(--mu);text-align:center;margin-top:14px}
-.rs a{color:var(--mu)}
+.rs{font-size:12px;color:var(--tx);text-align:center;margin-top:14px;background:var(--glass);border-radius:10px;padding:6px}
+.rs a{color:var(--tx)}
+
+.gear{position:absolute;right:6px;top:4px;background:none;border:0;font-size:22px;cursor:pointer;padding:4px}
+#cfg{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;z-index:5}
+#cfg.on{display:flex}
+.box{background:var(--card);color:var(--tx);border-radius:16px;padding:16px;width:min(92vw,380px);max-height:90vh;overflow:auto}
+.box b{font-size:17px}.box .row{margin-top:14px}.box small{display:block;color:var(--mu);margin-bottom:6px}
+.seg{display:flex;gap:6px}
+.seg button,.wide{flex:1;padding:10px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font-weight:600;width:100%}
+.seg button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.wide{margin-top:8px}
+#accm{font-size:12px;color:var(--mu);margin-top:6px}
 </style>
 </head>
 <body>
+<div id="bg"></div>
 <div class="top">
+  <button class="gear" id="gear" aria-label="Configurações">⚙️</button>
   <div class="stage" id="st"></div>
   <div class="money" id="mo"></div>
   <div class="ps" id="ps"></div>
@@ -46,7 +61,14 @@ body{max-width:520px;margin:0 auto;padding:12px}
 <div class="tap"><button id="btn" aria-label="Vender camarão">🦐</button></div>
 <div class="tabs"><button id="t0" class="on">Melhorias</button><button id="t1">Loja grátis</button></div>
 <div id="list"></div>
-<div class="rs"><a href="#" id="reset">Reiniciar jogo</a></div>
+<div class="rs" id="dl"><a href="https://github.com/gilbertolillian-netizen/Jogo-Camar-o/releases/latest/download/camarao-tycoon.apk">📲 Baixar o app para Android (APK)</a><br>Depois de baixar, permita instalar de fontes desconhecidas.</div>
+<div id="cfg"><div class="box">
+  <b>⚙️ Configurações</b>
+  <div class="row"><small>Tema</small><div class="seg"><button data-th="auto">Automático</button><button data-th="light">Claro</button><button data-th="dark">Escuro</button></div></div>
+  <div class="row" id="acc" style="display:none"><small>Conta Google (salva o progresso na nuvem)</small><div id="accb"></div><div id="accm"></div></div>
+  <div class="row"><button id="reset" class="wide">Reiniciar jogo</button><button id="cx" class="wide">Fechar</button></div>
+</div></div>
+<script src="firebase-config.js"></script>
 <script>
 var S=[
 {n:"Ambulante na praia",e:"🏖️",cb:1,cc:15,adv:2e4,g:[["Isopor maior",20,.5],["Carrinho de mão",150,4],["Ajudante",1e3,25],["Triciclo refrigerado",7e3,150]]},
@@ -66,8 +88,13 @@ function click(){return S[G.s].cb*(1+G.cl)*mult()}
 function gc(i){return Math.ceil(S[G.s].g[i][1]*Math.pow(1.15,G.o[i]))}
 function cc(){return Math.ceil(S[G.s].cc*Math.pow(1.6,G.cl))}
 var tab=0;
+var BG=[{g:"linear-gradient(#8fd3f4,#d9f1fb 70%,#fff3d6)",s:"<circle cx=\"320\" cy=\"50\" r=\"28\" fill=\"#ffd35a\"/><rect y=\"110\" width=\"400\" height=\"70\" fill=\"#27a4c8\"/><path d=\"M0 128q25-8 50 0t50 0 50 0 50 0 50 0 50 0 50 0 50 0\" fill=\"none\" stroke=\"#fff\" stroke-opacity=\".5\" stroke-width=\"3\"/><path d=\"M0 150q25-8 50 0t50 0 50 0 50 0 50 0 50 0 50 0 50 0\" fill=\"none\" stroke=\"#fff\" stroke-opacity=\".35\" stroke-width=\"3\"/><path d=\"M0 170q80-20 200-8t200 8v90H0z\" fill=\"#f4dc9d\"/><path d=\"M0 215q100-14 200-4t200-6v51H0z\" fill=\"#ecc97c\"/><path d=\"M60 230q-6-80 20-120\" fill=\"none\" stroke=\"#8a5a2b\" stroke-width=\"7\" stroke-linecap=\"round\"/><g fill=\"#2e9e5a\"><path d=\"M80 110q-40-14-62 14 30-10 62-14z\"/><path d=\"M80 110q-10-36-48-40 30 12 48 40z\"/><path d=\"M80 110q30-30 66-18-36 4-66 18z\"/><path d=\"M80 110q44 0 62 30-30-18-62-30z\"/></g>"},{g:"linear-gradient(#ff9a5a,#ffc27a 60%,#ffe6b8)",s:"<path d=\"M120 130a80 80 0 0 1 160 0z\" fill=\"#ffd27a\"/><rect y=\"130\" width=\"400\" height=\"50\" fill=\"#e0705a\"/><path d=\"M150 138h100M165 150h70M180 162h40\" stroke=\"#ffd27a\" stroke-width=\"4\" stroke-linecap=\"round\" opacity=\".7\"/><path d=\"M0 172q100-14 200-6t200 6v88H0z\" fill=\"#e9c58c\"/><path d=\"M0 222q100-12 200-3t200-3v44H0z\" fill=\"#dcae6e\"/><rect x=\"250\" y=\"170\" width=\"100\" height=\"60\" fill=\"#8a4b2d\"/><path d=\"M240 170l60-34 60 34z\" fill=\"#c2452d\"/><rect x=\"262\" y=\"188\" width=\"76\" height=\"14\" fill=\"#ffe3a8\"/><path d=\"M110 172v70\" stroke=\"#6b3b22\" stroke-width=\"4\"/><path d=\"M58 192q52-52 104 0z\" fill=\"#e0402f\"/><path d=\"M110 168v24M84 178l12 14M136 178l-12 14\" stroke=\"#fff\" stroke-width=\"3\"/><path d=\"M240 168q60 16 120 0\" fill=\"none\" stroke=\"#333\" stroke-opacity=\".4\"/><g fill=\"#fff3a0\"><circle cx=\"262\" cy=\"176\" r=\"3\"/><circle cx=\"290\" cy=\"181\" r=\"3\"/><circle cx=\"318\" cy=\"181\" r=\"3\"/><circle cx=\"346\" cy=\"176\" r=\"3\"/></g>"},{g:"linear-gradient(#5a2e22,#8a4a32)",s:"<rect x=\"30\" y=\"40\" width=\"130\" height=\"110\" rx=\"6\" fill=\"#16224a\"/><path d=\"M95 40v110M30 95h130\" stroke=\"#6b3b22\" stroke-width=\"5\"/><g fill=\"#ffe9a0\"><circle cx=\"55\" cy=\"70\" r=\"2\"/><circle cx=\"125\" cy=\"120\" r=\"2\"/><circle cx=\"140\" cy=\"60\" r=\"2\"/></g><rect x=\"240\" y=\"40\" width=\"130\" height=\"110\" rx=\"6\" fill=\"#16224a\"/><path d=\"M305 40v110M240 95h130\" stroke=\"#6b3b22\" stroke-width=\"5\"/><path d=\"M0 170h400v90H0z\" fill=\"#3a1f17\"/><path d=\"M0 195h400M0 225h400\" stroke=\"#2a150f\" stroke-width=\"3\"/><path d=\"M200 0v34M120 0v20M280 0v20\" stroke=\"#2a150f\" stroke-width=\"2\"/><g fill=\"#ffd36a\"><path d=\"M184 34h32l8 22h-48z\"/><path d=\"M108 20h24l6 16h-36z\"/><path d=\"M268 20h24l6 16h-36z\"/></g><circle cx=\"200\" cy=\"70\" r=\"46\" fill=\"#ffd36a\" opacity=\".18\"/><path d=\"M165 164v50M235 164v50\" stroke=\"#7a4a2b\" stroke-width=\"6\"/><rect x=\"150\" y=\"150\" width=\"100\" height=\"14\" fill=\"#d9a066\"/><path d=\"M150 150h100l-6-10h-88z\" fill=\"#f4f0e8\"/>"},{g:"linear-gradient(#bfe9e4,#e9f8f1)",s:"<path d=\"M0 120q120-40 240-10t160-10v160H0z\" fill=\"#7bbf6c\"/><path d=\"M0 170q200-30 400 0v90H0z\" fill=\"#5ea85a\"/><rect x=\"20\" y=\"150\" width=\"170\" height=\"60\" rx=\"14\" fill=\"#2b93b8\"/><rect x=\"215\" y=\"170\" width=\"165\" height=\"70\" rx=\"14\" fill=\"#2b93b8\"/><rect x=\"20\" y=\"222\" width=\"150\" height=\"34\" rx=\"12\" fill=\"#2b93b8\"/><g fill=\"none\" stroke=\"#fff\" stroke-opacity=\".55\" stroke-width=\"2\"><ellipse cx=\"70\" cy=\"178\" rx=\"22\" ry=\"7\"/><ellipse cx=\"140\" cy=\"190\" rx=\"18\" ry=\"6\"/><ellipse cx=\"270\" cy=\"200\" rx=\"24\" ry=\"8\"/><ellipse cx=\"335\" cy=\"215\" rx=\"16\" ry=\"5\"/></g><g fill=\"#ff7a52\"><path d=\"M110 170q10-8 18 0-8 2-18 0z\"/><path d=\"M300 190q10-8 18 0-8 2-18 0z\"/><path d=\"M50 235q10-8 18 0-8 2-18 0z\"/></g><path d=\"M385 130v-40M392 130v-30M378 130v-26\" stroke=\"#4a8a3e\" stroke-width=\"3\"/>"},{g:"linear-gradient(#2b1a4a,#7a3f8f 65%,#ff9f7a)",s:"<circle cx=\"60\" cy=\"40\" r=\"20\" fill=\"#fff6d6\"/><g fill=\"#1f1233\"><rect x=\"0\" y=\"120\" width=\"50\" height=\"140\"/><rect x=\"50\" y=\"80\" width=\"40\" height=\"180\"/><rect x=\"90\" y=\"140\" width=\"60\" height=\"120\"/><rect x=\"150\" y=\"60\" width=\"50\" height=\"200\"/><rect x=\"200\" y=\"110\" width=\"70\" height=\"150\"/><rect x=\"270\" y=\"90\" width=\"45\" height=\"170\"/><rect x=\"315\" y=\"130\" width=\"85\" height=\"130\"/></g><g fill=\"#ffd36a\"><rect x=\"58\" y=\"95\" width=\"6\" height=\"8\"/><rect x=\"72\" y=\"115\" width=\"6\" height=\"8\"/><rect x=\"58\" y=\"140\" width=\"6\" height=\"8\"/><rect x=\"160\" y=\"80\" width=\"6\" height=\"8\"/><rect x=\"178\" y=\"105\" width=\"6\" height=\"8\"/><rect x=\"160\" y=\"140\" width=\"6\" height=\"8\"/><rect x=\"178\" y=\"170\" width=\"6\" height=\"8\"/><rect x=\"215\" y=\"130\" width=\"6\" height=\"8\"/><rect x=\"240\" y=\"150\" width=\"6\" height=\"8\"/><rect x=\"282\" y=\"110\" width=\"6\" height=\"8\"/><rect x=\"298\" y=\"140\" width=\"6\" height=\"8\"/><rect x=\"330\" y=\"150\" width=\"6\" height=\"8\"/><rect x=\"360\" y=\"170\" width=\"6\" height=\"8\"/><rect x=\"105\" y=\"160\" width=\"6\" height=\"8\"/></g><path d=\"M0 220h400v40H0z\" fill=\"#2a1a45\"/><path d=\"M0 232h400\" stroke=\"#ffd36a\" stroke-opacity=\".5\" stroke-width=\"2\" stroke-dasharray=\"10 10\"/>"}];
+function setBg(i){var b=BG[i];document.getElementById("bg").style.background='url("data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">'+b.s+'</svg>')+'") center bottom/100% auto no-repeat,'+b.g}
+var TI=["🦐","🍤","🥘","🌊","👑"],TC=["#ff6b4a","#e8a317","#d4572a","#1e96c8","#8e44ad"];
 function render(){
   var s=S[G.s];
+  var bt=document.getElementById("btn");
+  if(bt.dataset.s!=String(G.s)){bt.dataset.s=G.s;bt.textContent=TI[G.s];setBg(G.s);document.documentElement.style.setProperty("--ac",TC[G.s])}
   document.getElementById("st").textContent=s.e+" Estágio "+(G.s+1)+"/5 · "+s.n;
   document.getElementById("mo").textContent="R$ "+fmt(G.m);
   document.getElementById("ps").textContent="R$ "+fmt(dps())+"/s · R$ "+fmt(click())+" por toque";
@@ -111,14 +138,70 @@ document.getElementById("btn").addEventListener("pointerdown",function(e){
   var p=document.querySelector(".tap");p.appendChild(f);setTimeout(function(){f.remove()},900);
   render();
 });
-["t0","t1"].forEach(function(id,i){document.getElementById(id).onclick=function(){tab=i;document.getElementById("t0").className=i?"":"on";document.getElementById("t1").className=i?"on":"";render()}});
+["t0","t1"].forEach(function(id,i){document.getElementById(id).onclick=function(){tab=i;["t0","t1"].forEach(function(o,j){document.getElementById(o).className=j==i?"on":""});render()}});
 document.getElementById("reset").onclick=function(e){e.preventDefault();if(confirm("Apagar todo o progresso?")){G=def();save();render()}};
+try{if(window.Capacitor&&Capacitor.getPlatform&&Capacitor.getPlatform()!="web")document.getElementById("dl").style.display="none"}catch(e){}
 G=load();
 var away=Math.min((Date.now()-G.t)/1000,8*3600);
 if(away>10){var gain=dps()*away*.5;if(gain>0){G.m+=gain;setTimeout(function(){alert("Enquanto você estava fora, seus funcionários venderam R$ "+fmt(gain)+" 🦐")},300)}}
 setInterval(function(){var n=Date.now(),dt=(n-last)/1000;last=n;G.m+=dps()*dt;render()},250);
 setInterval(save,5000);
 document.addEventListener("visibilitychange",function(){if(document.hidden)save()});
+
+
+/* ===== Configurações: tema e conta Google ===== */
+function setTheme(m){
+  try{localStorage.setItem("camarao_theme",m)}catch(e){}
+  var r=document.documentElement;if(m=="auto")r.removeAttribute("data-theme");else r.setAttribute("data-theme",m);
+  document.querySelectorAll("[data-th]").forEach(function(b){b.className=b.dataset.th==m?"on":""});
+}
+var th="auto";try{th=localStorage.getItem("camarao_theme")||"auto"}catch(e){}
+setTheme(th);
+document.querySelectorAll("[data-th]").forEach(function(b){b.onclick=function(){setTheme(b.dataset.th)}});
+document.getElementById("gear").onclick=function(){accRender();document.getElementById("cfg").className="on"};
+document.getElementById("cx").onclick=function(){document.getElementById("cfg").className=""};
+document.getElementById("cfg").addEventListener("click",function(e){if(e.target.id=="cfg")e.target.className=""});
+
+var FB=null,US=null;
+function cloudOn(){return !!window.FB_CFG&&!(window.Capacitor&&Capacitor.getPlatform&&Capacitor.getPlatform()!="web")}
+function cloudMsg(m){var e=document.getElementById("accm");if(e)e.textContent=m}
+function ld(src,cb){var s=document.createElement("script");s.src=src;s.onload=cb;s.onerror=function(){cloudMsg("Sem conexão com a nuvem")};document.head.appendChild(s)}
+function fbInit(){
+  if(FB||!cloudOn())return;
+  var b="https://www.gstatic.com/firebasejs/10.12.2/";
+  ld(b+"firebase-app-compat.js",function(){ld(b+"firebase-auth-compat.js",function(){ld(b+"firebase-firestore-compat.js",function(){
+    try{firebase.initializeApp(window.FB_CFG);FB={a:firebase.auth(),d:firebase.firestore()};FB.a.onAuthStateChanged(onUser)}catch(e){cloudMsg("Configuração da nuvem inválida")}
+  })})});
+}
+function onUser(u){US=u;accRender();if(u)syncIn()}
+function accRender(){
+  var box=document.getElementById("acc");if(!cloudOn()){box.style.display="none";return}
+  box.style.display="block";var h=document.getElementById("accb");
+  if(US){h.innerHTML='<div style="font-size:13px;margin-bottom:6px">'+(US.displayName||US.email||"Conectado")+'</div><div class="seg"><button id="sv">Salvar agora</button><button id="lo">Sair</button></div>';
+    document.getElementById("sv").onclick=function(){syncOut()};
+    document.getElementById("lo").onclick=function(){FB.a.signOut()}}
+  else{h.innerHTML='<button class="wide" id="li" style="margin-top:0">Entrar com Google</button>';
+    document.getElementById("li").onclick=function(){
+      if(!FB){cloudMsg("Carregando... tente de novo em instantes");return}
+      FB.a.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function(){cloudMsg("Não foi possível entrar")})}}
+}
+function syncIn(){
+  FB.d.collection("saves").doc(US.uid).get().then(function(s){
+    if(s.exists){var c=JSON.parse(s.data().d);
+      if(c.t>G.t&&confirm("Há um progresso mais recente salvo na nuvem. OK = usar o da nuvem. Cancelar = manter o deste aparelho (e substituir a nuvem).")){
+        G=c;G.tx=G.tx||[];save();render();cloudMsg("Progresso da nuvem carregado ✔")}
+      else syncOut()
+    }else syncOut()
+  }).catch(function(){cloudMsg("Erro ao ler a nuvem")})
+}
+function syncOut(q){
+  if(!US||!FB)return;
+  FB.d.collection("saves").doc(US.uid).set({t:Date.now(),d:JSON.stringify(G)})
+    .then(function(){if(!q)cloudMsg("Salvo na nuvem ✔")}).catch(function(){cloudMsg("Erro ao salvar na nuvem")})
+}
+setInterval(function(){if(US)syncOut(true)},60000);
+document.addEventListener("visibilitychange",function(){if(document.hidden&&US)syncOut(true)});
+fbInit();
 render();
 </script>
 </body>

@@ -2,9 +2,15 @@ name: Build APK
 on:
   push:
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      KS_B64: ${{ secrets.KEYSTORE_BASE64 }}
+      KS_PASS: ${{ secrets.KS_PASS }}
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,8 +28,28 @@ jobs:
           rm -f android/app/src/main/res/drawable-v24/ic_launcher_foreground.xml
           cp -r icons/res/. android/app/src/main/res/
       - run: npx cap sync android
-      - run: chmod +x android/gradlew && cd android && ./gradlew assembleDebug
+      - name: Número da versão
+        run: sed -i "s/versionCode 1/versionCode ${{ github.run_number }}/" android/app/build.gradle
+      - run: chmod +x android/gradlew
+      - name: APK de teste (sem chave própria)
+        if: env.KS_B64 == ''
+        run: |
+          cd android && ./gradlew assembleDebug && cd ..
+          cp android/app/build/outputs/apk/debug/app-debug.apk camarao-tycoon.apk
+      - name: APK assinado com a sua chave
+        if: env.KS_B64 != ''
+        run: |
+          echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          cd android && ./gradlew assembleRelease && cd ..
+          BT=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
+          $BT/zipalign -f -p 4 android/app/build/outputs/apk/release/app-release-unsigned.apk "$RUNNER_TEMP/aligned.apk"
+          $BT/apksigner sign --ks "$RUNNER_TEMP/release.jks" --ks-key-alias camarao --ks-pass env:KS_PASS --out camarao-tycoon.apk "$RUNNER_TEMP/aligned.apk"
+      - name: Publicar APK no link de download do site
+        if: github.ref == 'refs/heads/main'
+        run: |
+          gh release view apk-atual >/dev/null 2>&1 || gh release create apk-atual --title "APK mais recente" --notes "Baixe o camarao-tycoon.apk"
+          gh release upload apk-atual camarao-tycoon.apk --clobber
       - uses: actions/upload-artifact@v4
         with:
           name: camarao-tycoon-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: camarao-tycoon.apk
