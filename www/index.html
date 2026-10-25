@@ -47,6 +47,16 @@ body{max-width:520px;margin:0 auto;padding:12px}
 .seg button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
 .wide{margin-top:8px}
 #accm{font-size:12px;color:var(--mu);margin-top:6px}
+#ev{position:fixed;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);max-width:504px;margin:0 auto;background:var(--card);color:var(--tx);border:2px solid var(--ac);border-radius:14px;padding:10px;z-index:4;display:none;box-shadow:0 4px 16px #0006}
+#ev b{font-size:15px}#ev small{display:block;color:var(--mu);margin:2px 0 8px}
+#ev .seg{flex-wrap:wrap}#ev .seg button{padding:9px;font-size:13px}#ev .seg button:disabled{opacity:.45}
+#evbar{height:4px;background:var(--bd);border-radius:3px;margin-top:8px;overflow:hidden}#evb{height:100%;background:var(--ac);width:100%}
+.sd{font-size:12px;font-style:italic;color:var(--mu);margin-top:3px;line-height:1.35}
+em{font-style:italic;color:var(--tx);opacity:.85}
+.sn{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.sn button{flex:1 1 30%;padding:9px 4px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-weight:600;font-size:13px}
+.sn button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+#toast{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:50%;transform:translateX(-50%);background:var(--card);color:var(--tx);border:2px solid var(--ac);border-radius:12px;padding:8px 14px;z-index:6;display:none;max-width:90vw;font-size:14px;font-weight:600;text-align:center;box-shadow:0 4px 16px #0006}
 </style>
 </head>
 <body>
@@ -54,21 +64,25 @@ body{max-width:520px;margin:0 auto;padding:12px}
 <div class="top">
   <button class="gear" id="gear" aria-label="Configurações">⚙️</button>
   <div class="stage" id="st"></div>
+  <div class="sd" id="sd"></div>
   <div class="money" id="mo"></div>
   <div class="ps" id="ps"></div>
   <div class="boost" id="bo"></div>
 </div>
 <div class="tap"><button id="btn" aria-label="Vender camarão">🦐</button></div>
-<div class="tabs"><button id="t0" class="on">Melhorias</button><button id="t1">Loja grátis</button><button id="t2">Renascer</button></div>
+<div class="tabs"><button id="t0" class="on">Melhorias</button><button id="t1">Grátis</button><button id="t2">Renascer</button><button id="t3">Mais</button></div>
 <div id="list"></div>
 <div class="rs" id="dl"><a href="https://github.com/gilbertolillian-netizen/Jogo-Camar-o/releases/latest/download/camarao-tycoon.apk">📲 Baixar o app para Android (APK)</a><br>Depois de baixar, permita instalar de fontes desconhecidas.</div>
 <div id="cfg"><div class="box">
   <b>⚙️ Configurações</b>
   <div class="row"><small>Tema</small><div class="seg"><button data-th="auto">Automático</button><button data-th="light">Claro</button><button data-th="dark">Escuro</button></div></div>
+  <div class="row"><small>Som e vibração</small><div class="seg"><button id="sndb"></button><button id="vibb"></button></div></div>
   <div class="row" id="acc" style="display:none"><small>Conta Google (salva o progresso na nuvem)</small><div id="accb"></div><div id="accm"></div></div>
   <div class="row"><button id="reset" class="wide">Reiniciar jogo</button><button id="cx" class="wide">Fechar</button></div>
 </div></div>
 <div id="shop"><div class="box" id="shopbox"></div></div>
+<div id="ev"></div>
+<div id="toast"></div>
 <script src="firebase-config.js"></script>
 <script>
 var K=60;
@@ -99,15 +113,15 @@ var NM=[
 ["Multiverso", "🌀", ["Portal dimensional", "Universo paralelo", "Rede de universos", "Feixe do multiverso"]],
 ["Camarão Supremo", "👑", ["Altar cósmico", "Trono dourado", "Coroa do infinito", "Ascensão suprema"]]
 ];
-var S=NM.map(function(x,i){var f=Math.pow(20,i);return{n:x[0],e:x[1],cb:f,cc:15*f,adv:2e4*Math.pow(K,i),g:x[2].map(function(nm,j){return[nm,[20,150,1e3,7e3][j]*f,[.5,4,25,150][j]*f]})}});
+var S=NM.map(function(x,i){var f=Math.pow(20,i);return{n:x[0],e:x[1],cb:f,cc:15*f,get adv(){return 2e4*Math.pow(K,i)*dif()},g:x[2].map(function(nm,j){return[nm,[20,150,1e3,7e3][j]*f,[.5,4,25,150][j]*f]})}});
 var G,SK="camarao_v1",last=Date.now();
-function def(){return{m:0,s:0,o:[0,0,0,0],cl:0,pm:1,t:Date.now(),bt:0,fc:0,ft:0,pu:{},pe:0,nr:0,sh:0,rs:0}}
+function def(){return fixG({m:0,s:0,o:[0,0,0,0],cl:0,pm:1,t:Date.now(),bt:0,fc:0,ft:0,pu:{},pe:0,nr:0,sh:0,rs:0})}
 function load(){try{var r=localStorage.getItem(SK);if(r){var d=JSON.parse(r);if(d&&d.o)return fixG(d)}}catch(e){}return def()}
 function save(){try{G.t=Date.now();localStorage.setItem(SK,JSON.stringify(G))}catch(e){}}
 function fmt(n){var u=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc"],i=0;while(n>=1000&&i<11){n/=1000;i++}if(n>=1000)return (n*Math.pow(1000,i)).toExponential(2).replace("+","");return (n<10&&i?n.toFixed(2):n<100&&i?n.toFixed(1):Math.floor(n))+u[i]}
-function mult(){return G.pm*(Date.now()<G.bt?2:1)*Math.pow(1.5,lv("re"))}
+function mult(){return G.pm*(Date.now()<G.bt?2:1)*Math.pow(1.5,lv("re"))*efm("inc")*acMult()}
 function dps(){var s=S[G.s],t=0;for(var i=0;i<4;i++)t+=G.o[i]*s.g[i][2];return t*mult()}
-function click(){return S[G.s].cb*(1+G.cl)*mult()*Math.pow(2,lv("to"))}
+function click(){return S[G.s].cb*(1+G.cl)*mult()*Math.pow(2,lv("to"))*efm("tap")}
 function gc(i){return Math.ceil(S[G.s].g[i][1]*Math.pow(1.15,G.o[i])*Math.pow(.95,lv("de")))}
 function cc(){return Math.ceil(S[G.s].cc*Math.pow(1.6,G.cl))}
 var tab=0;
@@ -117,17 +131,17 @@ var TI=["🦐", "🍤", "🥘", "🌊", "🏙️", "🏭", "🚢", "🌍", "🧬
 function render(){
   var s=S[G.s];
   var bt=document.getElementById("btn");
-  if(bt.dataset.s!=String(G.s)){bt.dataset.s=G.s;bt.textContent=TI[G.s];setBg(G.s);document.documentElement.style.setProperty("--ac",TC[G.s])}
+  if(bt.dataset.s!=String(G.s)){bt.dataset.s=G.s;bt.textContent=TI[G.s];setBg(G.s);document.documentElement.style.setProperty("--ac",TC[G.s]);document.getElementById("sd").textContent=CH?"“"+CH[G.s]+"”":""}
   document.getElementById("st").textContent=s.e+" Estágio "+(G.s+1)+"/"+S.length+" · "+s.n;
   document.getElementById("mo").textContent="R$ "+fmt(G.m);
   document.getElementById("ps").textContent="R$ "+fmt(dps())+"/s · R$ "+fmt(click())+" por toque"+(G.pe?" · 🐚 "+G.pe:"");
   var b=Date.now()<G.bt;
-  document.getElementById("bo").textContent=b?"🔥 Banquete ativo: renda x2 ("+Math.ceil((G.bt-Date.now())/1000)+"s)":"";
+  document.getElementById("bo").textContent=boText(b);
   var h="";
   if(tab==0){
     var c=cc();
-    h+=item("👆","Camarão maior","+"+fmt(s.cb*mult())+" por toque · nível "+G.cl,"R$ "+fmt(c),G.m>=c,"cl");
-    for(var i=0;i<4;i++){var k=gc(i);h+=item("🦐",s.g[i][0],"+R$ "+fmt(s.g[i][2]*mult())+"/s · você tem "+G.o[i],"R$ "+fmt(k),G.m>=k,"g"+i)}
+    h+=item("👆","Camarão maior",'<em>“Escolha só os camarões graúdos: cada toque rende mais.”</em><br>+'+fmt(s.cb*mult())+" por toque · nível "+G.cl,"R$ "+fmt(c),G.m>=c,"cl");
+    for(var i=0;i<4;i++){var k=gc(i);h+=item("🦐",s.g[i][0],'<em>“'+UD[G.s][i]+'”</em><br>+R$ '+fmt(s.g[i][2]*mult())+"/s · você tem "+G.o[i],"R$ "+fmt(k),G.m>=k,"g"+i)}
     if(G.s<S.length-1){
       h+='<div class="bar"><i style="width:'+Math.min(100,G.m/s.adv*100)+'%"></i></div>';
       h+='<button class="adv" id="adv" '+(G.m>=s.adv?"":"disabled")+'>Avançar: '+S[G.s+1].n+' (R$ '+fmt(s.adv)+')</button>';
@@ -139,11 +153,14 @@ function render(){
     h+=item("🍤","Banquete grátis","Renda x2 por 30s"+(left?" · volta em "+left+"s":""),"GRÁTIS",!left,"f1");
     h+=item("🧊","Caixa de gelo grátis","Ganha 60s de renda na hora"+(Date.now()<G.ft?" · volta em "+Math.ceil((G.ft-Date.now())/1000)+"s":""),"GRÁTIS",Date.now()>=G.ft,"f2");
     h+='<div class="rs">Tudo aqui é de graça, sem dinheiro real.</div>';
-  } else {
+  } else if(tab==2){
     var pg=pearlGain();
     h+='<div class="rs">🐚 Pérolas: <b>'+G.pe+'</b> · Renascimentos: '+G.nr+'</div>';
     h+=item("🔄","Renascer","Volta ao estágio inicial e ganha "+pg+" pérola(s). As pérolas só podem ser gastas ao renascer.","+"+pg+" 🐚",pg>=1,"rb");
     h+='<div class="rs">Quanto mais longe você chegar, mais pérolas ganha. Bônus atuais: renda ×'+fx(Math.pow(1.5,lv("re")))+' · toque ×'+fx(Math.pow(2,lv("to")))+'</div>';
+    h+='<div class="rs">⚠️ Dificuldade atual: ×'+fx(dif())+' · depois de renascer: ×'+fx(dif()+.2)+'</div>';
+  } else {
+    h+=moreView();
   }
   var el=document.getElementById("list");
   if(el.dataset.h!==h){el.innerHTML=h;el.dataset.h=h}
@@ -151,29 +168,33 @@ function render(){
 function item(ic,n,d,p,ok,id){return '<div class="it"><div style="font-size:26px">'+ic+'</div><div class="i"><b>'+n+'</b><small>'+d+'</small></div><button data-id="'+id+'" '+(ok?"":"disabled")+'>'+p+'</button></div>'}
 document.getElementById("list").addEventListener("click",function(e){
   var t=e.target.closest("button");if(!t)return;
-  if(t.id=="adv"){var s=S[G.s];if(G.m>=s.adv){G.s++;G.m=0;G.o=[0,0,0,0];G.cl=0;G.pm*=1.5;save();render()}return}
+  if(t.dataset.sub!==undefined){sub=+t.dataset.sub;if(sub==3)rkLoad();render();return}
+  if(t.id=="rkr"){rkLoad();return}
+  if(t.id=="nks"){nickSave();return}
+  if(t.id=="adv"){var s=S[G.s];if(G.m>=s.adv){G.s++;G.m=0;G.o=[0,0,0,0];G.cl=0;G.pm*=1.5;advanced();save();render()}return}
   var id=t.dataset.id;if(!id||t.disabled)return;
-  if(id=="cl"){var c=cc();if(G.m>=c){G.m-=c;G.cl++}}
-  else if(id[0]=="g"){var i=+id[1],k=gc(i);if(G.m>=k){G.m-=k;G.o[i]++}}
-  else if(id=="f1"&&Date.now()>=G.fc){G.bt=Date.now()+3e4;G.fc=Date.now()+6e4}
-  else if(id=="f2"&&Date.now()>=G.ft){G.m+=dps()*60;G.ft=Date.now()+45e3}
+  if(id=="cl"){var c=cc();if(G.m>=c){G.m-=c;G.cl++;bought()}}
+  else if(id[0]=="g"){var i=+id[1],k=gc(i);if(G.m>=k){G.m-=k;G.o[i]++;bought()}}
+  else if(id=="f1"&&Date.now()>=G.fc){G.bt=Date.now()+3e4;G.fc=Date.now()+6e4;freeUsed()}
+  else if(id=="f2"&&Date.now()>=G.ft){G.m+=dps()*60;G.ft=Date.now()+45e3;freeUsed()}
   else if(id=="rb"){doReset();return}
+  else if(id.slice(0,3)=="mq_"){claimQ(+id.slice(3))}
   render();
 });
 document.getElementById("btn").addEventListener("pointerdown",function(e){
-  var v=click();G.m+=v;
+  var v=click();G.m+=v;G.st.tp++;G.st.ge+=v;dqAdd("tp",1);sfx("tap");
   var f=document.createElement("div");f.className="fl";f.textContent="+"+fmt(v);
   f.style.left=(50+(Math.random()*60-30))+"%";f.style.top="20px";
   var p=document.querySelector(".tap");p.appendChild(f);setTimeout(function(){f.remove()},900);
   render();
 });
-["t0","t1","t2"].forEach(function(id,i){document.getElementById(id).onclick=function(){tab=i;["t0","t1","t2"].forEach(function(o,j){document.getElementById(o).className=j==i?"on":""});render()}});
+["t0","t1","t2","t3"].forEach(function(id,i){document.getElementById(id).onclick=function(){tab=i;["t0","t1","t2","t3"].forEach(function(o,j){document.getElementById(o).className=j==i?"on":""});render()}});
 document.getElementById("reset").onclick=function(e){e.preventDefault();if(confirm("Apagar todo o progresso?")){G=def();save();render()}};
 try{if(window.Capacitor&&Capacitor.getPlatform&&Capacitor.getPlatform()!="web")document.getElementById("dl").style.display="none"}catch(e){}
 G=load();
 var away=Math.min((Date.now()-G.t)/1000,8*3600);
 if(away>10){var gain=dps()*away*(.5+.1*lv("of"));if(gain>0){G.m+=gain;setTimeout(function(){alert("Enquanto você estava fora, seus funcionários venderam R$ "+fmt(gain)+" 🦐")},300)}}
-setInterval(function(){var n=Date.now(),dt=(n-last)/1000;last=n;G.m+=dps()*dt;render()},250);
+setInterval(function(){var n=Date.now(),dt=(n-last)/1000;last=n;G.m+=dps()*dt;statTick(dt);evTick();render()},250);
 setInterval(save,5000);
 document.addEventListener("visibilitychange",function(){if(document.hidden)save()});
 
@@ -225,6 +246,7 @@ function syncIn(){
 }
 function syncOut(q){
   if(!US||!FB)return;
+  rkPush();
   FB.d.collection("saves").doc(US.uid).set({t:Date.now(),d:JSON.stringify(G)})
     .then(function(){if(!q)cloudMsg("Salvo na nuvem ✔")}).catch(function(){cloudMsg("Erro ao salvar na nuvem")})
 }
@@ -234,14 +256,17 @@ fbInit();
 
 /* ===== Renascimento e Loja de Pérolas ===== */
 var SH=[
- {k:"re",ic:"💰",n:"Renda eterna",d:"Renda ×1,5 por nível",b:1,r:1.6},
- {k:"to",ic:"👆",n:"Toque dourado",d:"Toque ×2 por nível",b:2,r:2},
- {k:"de",ic:"🏷️",n:"Fornecedor amigo",d:"Melhorias 5% mais baratas por nível (máx. 15)",b:3,r:1.8,max:15},
- {k:"ca",ic:"🚀",n:"Começar adiantado",d:"Cada jornada começa 1 estágio à frente por nível (máx. 10)",b:5,r:2.2,max:10},
- {k:"pe",ic:"🐚",n:"Mais pérolas",d:"+20% de pérolas ao renascer por nível",b:4,r:2},
- {k:"of",ic:"🌙",n:"Renda offline",d:"+10% do ganho enquanto você está fora, por nível (máx. 5)",b:3,r:2,max:5}
+ {k:"re",ic:"💰",n:"Renda eterna",q:"O mar nunca esquece quem cuida dele.",d:"Renda ×1,5 por nível",b:1,r:1.6},
+ {k:"to",ic:"👆",n:"Toque dourado",q:"Cada toque, uma pequena fortuna.",d:"Toque ×2 por nível",b:2,r:2},
+ {k:"de",ic:"🏷️",n:"Fornecedor amigo",q:"O fornecedor deixa pagar depois, e com desconto.",d:"Melhorias 5% mais baratas por nível (máx. 15)",b:3,r:1.8,max:15},
+ {k:"ca",ic:"🚀",n:"Começar adiantado",q:"Quem já fez o caminho conhece os atalhos.",d:"Cada jornada começa 1 estágio à frente por nível (máx. 10)",b:5,r:2.2,max:10},
+ {k:"pe",ic:"🐚",n:"Mais pérolas",q:"Dizem que a maré traz mais do que a gente pede.",d:"+20% de pérolas ao renascer por nível",b:4,r:2},
+ {k:"of",ic:"🌙",n:"Renda offline",q:"O império trabalha enquanto você sonha.",d:"+10% do ganho enquanto você está fora, por nível (máx. 5)",b:3,r:2,max:5}
 ];
-function fixG(d){d.pu=d.pu||{};d.pe=d.pe||0;d.nr=d.nr||0;d.sh=d.sh||0;d.rs=d.rs||0;return d}
+function dif(){return 1+.2*((G&&G.nr)||0)}
+function fixG(d){d.pu=d.pu||{};d.pe=d.pe||0;d.nr=d.nr||0;d.sh=d.sh||0;d.rs=d.rs||0;d.sp=d.sp||0;d.nick=d.nick||"";
+  d.st=d.st||{};["tp","ts","ev","ge","pl","bu","fr","mx"].forEach(function(k){d.st[k]=d.st[k]||0});d.st.mx=Math.max(d.st.mx,d.s||0);
+  d.ac=d.ac||{};d.dq=d.dq||{d:"",p:{},c:{},a:0};return d}
 function lv(k){return (G&&G.pu&&G.pu[k])||0}
 function fx(n){return n<1000?n.toFixed(1).replace(".",","):fmt(n)}
 function shCost(x){return Math.ceil(x.b*Math.pow(x.r,lv(x.k)))}
@@ -251,8 +276,8 @@ function pearlGain(){
 }
 function doReset(){
   var g=pearlGain();if(g<1)return;
-  if(!confirm("Renascer reinicia sua jornada e dá "+g+" pérola(s). Você vai poder gastá-las na Loja de Pérolas, só agora. Continuar?"))return;
-  G.pe+=g;G.nr++;
+  if(!confirm("Renascer reinicia sua jornada e dá "+g+" pérola(s), que você gasta na Loja de Pérolas, só agora. A dificuldade sobe para ×"+fx(dif()+.2)+". Continuar?"))return;
+  G.pe+=g;G.st.pl+=g;G.nr++;
   var st=Math.min(lv("ca"),S.length-1);
   G.m=0;G.s=st;G.rs=st;G.o=[0,0,0,0];G.cl=0;G.pm=Math.pow(1.5,st);G.bt=0;G.sh=1;
   save();render();openShop();
@@ -260,7 +285,7 @@ function doReset(){
 function shopRender(){
   var h='<b>🐚 Loja de Pérolas</b><div class="rs">Pérolas: <b>'+G.pe+'</b><br>Só dá para gastar agora, ao renascer.</div>';
   SH.forEach(function(x){var l=lv(x.k),c=shCost(x),mx=x.max&&l>=x.max;
-    h+=item(x.ic,x.n+" (nv "+l+")",x.d,mx?"MÁX":c+" 🐚",!mx&&G.pe>=c,"sh_"+x.k)});
+    h+=item(x.ic,x.n+" (nv "+l+")",'<em>“'+x.q+'”</em><br>'+x.d,mx?"MÁX":c+" 🐚",!mx&&G.pe>=c,"sh_"+x.k)});
   h+='<button class="wide" id="shgo">Começar nova jornada</button>';
   document.getElementById("shopbox").innerHTML=h;
 }
@@ -275,6 +300,221 @@ document.getElementById("shopbox").addEventListener("click",function(e){
   var c=shCost(x);if(G.pe>=c&&!(x.max&&lv(x.k)>=x.max)){G.pe-=c;G.pu[x.k]=lv(x.k)+1;save();shopRender();render()}
 });
 if(G.sh)openShop();
+
+/* ===== Eventos aleatórios ===== */
+var EF={},EV={cur:null,next:Date.now()+(120+Math.random()*120)*1000};
+function efm(k){var f=EF&&EF[k];return f&&Date.now()<f.u?f.m:1}
+function setEf(k,m,sec){EF[k]={m:m,u:Date.now()+sec*1000}}
+function boText(b){
+  var o=[];if(b)o.push("🔥 Banquete ×2 ("+Math.ceil((G.bt-Date.now())/1000)+"s)");
+  [["inc","renda"],["tap","toque"]].forEach(function(x){var f=EF[x[0]];
+    if(f&&Date.now()<f.u)o.push((f.m>1?"✨ ":"⚠️ ")+x[1]+" ×"+String(f.m).replace(".",",")+" ("+Math.ceil((f.u-Date.now())/1000)+"s)")});
+  return o.join(" · ");
+}
+var EVS=[
+ {w:10,ic:"🌊",t:"Maré cheia!",d:"Os clientes chegaram em peso.",ch:[{l:function(){return "Aproveitar"},f:function(){setEf("inc",3,60);return "Renda ×3 por 60 segundos!"}}]},
+ {w:10,ic:"🐟",t:"Cardume gigante!",d:"Um cardume enorme apareceu.",ch:[{l:function(){return "Pescar"},f:function(){setEf("tap",5,30);return "Toque ×5 por 30 segundos!"}}]},
+ {w:10,ic:"🧳",t:"Turista famoso",d:"Um turista famoso quer provar seu camarão.",ch:[{l:function(){return "Atender"},f:function(c){var g=Math.max(c.p*120,c.k*30);G.m+=g;return "Você ganhou R$ "+fmt(g)+"!"}}]},
+ {w:8,ic:"🧊",t:"O freezer quebrou!",d:"Conserte agora ou aguente o prejuízo.",ch:[
+   {l:function(c){return "Consertar (R$ "+fmt(c.p*60)+")"},need:function(c){return c.p*60},f:function(c){G.m-=c.p*60;return "Freezer consertado."}},
+   {l:function(){return "Ignorar"},f:function(){setEf("inc",.5,60);return "Renda ×0,5 por 60 segundos."}}]},
+ {w:8,ic:"🕵️",t:"Fiscal sanitário",d:"O fiscal chegou de surpresa.",ch:[
+   {l:function(c){return "Pagar multa (R$ "+fmt(c.p*30)+")"},need:function(c){return c.p*30},f:function(c){G.m-=c.p*30;return "Multa paga."}},
+   {l:function(){return "Tentar a sorte"},f:function(c){if(Math.random()<.5)return "O fiscal não achou nada!";var d=Math.min(G.m,c.p*60);G.m-=d;return "Multa em dobro: -R$ "+fmt(d)+"."}}]},
+ {w:1,min:3,ic:"🐚",t:"Pérola rara!",d:"Um camarão guardava uma pérola.",ch:[{l:function(){return "Pegar"},f:function(){G.pe++;G.st.pl++;return "+1 pérola 🐚 (gaste ao renascer)."}}]},
+ {w:12,max:1,ic:"⛈️",t:"Tempestade na praia",d:"O tempo fechou de repente.",ch:[
+   {l:function(){return "Esperar passar"},f:function(){return "Você esperou a tempestade passar."}},
+   {l:function(){return "Arriscar vender"},f:function(){if(Math.random()<.5){setEf("inc",2,60);return "Vendas bombaram: renda ×2 por 60s!"}setEf("inc",.5,60);return "Choveu nos clientes: renda ×0,5 por 60s."}}]},
+ {w:12,min:5,max:6,ic:"🪧",t:"Greve no porto!",d:"Os estivadores pararam.",ch:[
+   {l:function(c){return "Negociar (R$ "+fmt(c.p*45)+")"},need:function(c){return c.p*45},f:function(c){G.m-=c.p*45;setEf("inc",2,90);return "Acordo fechado: renda ×2 por 90s!"}},
+   {l:function(){return "Ignorar"},f:function(){setEf("inc",.7,60);return "Greve: renda ×0,7 por 60s."}}]},
+ {w:12,min:17,ic:"☄️",t:"Chuva de meteoros!",d:"Pedaços de rocha cheios de minerais.",ch:[{l:function(){return "Coletar"},f:function(){setEf("tap",10,20);return "Toque ×10 por 20 segundos!"}}]}
+];
+function evPick(){
+  var pool=EVS.filter(function(e){return (e.min===undefined||G.s>=e.min)&&(e.max===undefined||G.s<=e.max)});
+  var tot=pool.reduce(function(a,e){return a+e.w},0),r=Math.random()*tot;
+  for(var i=0;i<pool.length;i++){r-=pool[i].w;if(r<=0)return pool[i]}
+  return pool[0];
+}
+function evShow(e){
+  var c={p:dps(),k:click()};EV.cur=e;EV.ctx=c;EV.done=0;EV.dur=15e3;EV.exp=Date.now()+15e3;
+  var h='<b>'+e.ic+' '+e.t+'</b><small>'+e.d+'</small><div class="seg">';
+  e.ch.forEach(function(x,i){var need=x.need?x.need(c):0;h+='<button data-i="'+i+'"'+(G.m<need?" disabled":"")+'>'+x.l(c)+'</button>'});
+  h+='</div><div id="evbar"><div id="evb"></div></div>';
+  var el=document.getElementById("ev");el.innerHTML=h;el.style.display="block";sfx("ev");
+}
+function evClose(){
+  document.getElementById("ev").style.display="none";EV.cur=null;
+  EV.next=Date.now()+(180+Math.random()*180)*1000;
+}
+function evTick(){
+  var n=Date.now();
+  if(EV.cur){
+    if(n>=EV.exp){evClose();return}
+    var b=document.getElementById("evb");if(b)b.style.width=Math.max(0,(EV.exp-n)/EV.dur*100)+"%";
+    return;
+  }
+  if(n<EV.next||document.hidden||G.sh||document.getElementById("cfg").className=="on")return;
+  evShow(evPick());
+}
+document.getElementById("ev").addEventListener("click",function(e){
+  var b=e.target.closest("button");if(!b||!EV.cur||EV.done)return;
+  var x=EV.cur.ch[+b.dataset.i];if(!x)return;
+  var need=x.need?x.need(EV.ctx):0;if(G.m<need)return;
+  var msg=x.f(EV.ctx);EV.done=1;G.st.ev++;dqAdd("ev",1);EV.exp=Date.now()+3000;EV.dur=3000;
+  document.getElementById("ev").innerHTML='<b>'+EV.cur.ic+' '+EV.cur.t+'</b><small style="margin:4px 0 0">'+msg+'</small><div id="evbar"><div id="evb"></div></div>';
+  save();render();
+});
+
+/* ===== Conquistas, missões, estatísticas, ranking e sons ===== */
+var CH=["Chinelo na mão, isopor na outra. Você grita \"olha o camarão!\" e a praia sorri. Cada venda paga o dia.", "Uma chapa, um guarda-sol e a receita de alho da vovó. Sua barraca vira ponto de encontro da praia.", "Quatro paredes e um telhado de verdade! O restaurante abre e o cheiro de alho conquista a cidade.", "Cansado de depender da pesca, você cria os próprios camarões. Água limpa, paciência e muito carinho.", "As filiais se espalham pelo litoral. Seu camarão virou marca, e o logo está em toda esquina.", "Chega de descascar à mão! Máquinas, congeladores e esteiras levam seu camarão a qualquer geladeira.", "Contêineres cruzam o oceano com o seu nome. O mundo inteiro descobre o sabor do litoral.", "Fazendas no mar, restaurantes em todos os continentes. O ambulante virou lenda.", "A ciência entra na receita: camarões mais saborosos, mais fortes e mais felizes.", "Toalhas brancas, velas e três estrelas. Seu camarão chega à mesa dos críticos mais exigentes.", "Você leva o cultivo para alto-mar. Plataformas, boias e gaiolas, e o oceano trabalhando por você.", "Do restaurante ao carrinho de compras: seu camarão está em toda prateleira refrigerada.", "Navios com buffet à vontade! Seu camarão viaja o mundo com os turistas.", "Montanhas-russas, mascotes e algodão-doce. Um parque inteiro dedicado ao camarão.", "Programas, séries e filmes. Agora todo mundo conhece a sua história, e quer um prato.", "Tanto dinheiro que você abre o próprio banco e a bolsa onde o camarão tem cotação.", "Cúpulas de vidro no fundo do mar. Pessoas e camarões vivendo lado a lado.", "Um pequeno passo para o homem, um grande salto para o camarão. A Lua agora tem restaurante.", "A colônia vermelha precisava de sabor. Domos, rovers e camarões em solo marciano.", "Em órbita, sem peso, o camarão boia ao lado dos astronautas. Café da manhã espacial!", "Naves exploradoras procuram planetas com oceanos. Seu império agora cruza as estrelas.", "Um planeta inteiro só para camarões, com oceano artificial e cidades flutuantes.", "Sistemas estelares inteiros temperados com alho. A Via Láctea nunca foi tão saborosa.", "Portais abrem para realidades paralelas. Em todas elas existe um camarão seu.", "Você ascendeu. O tempo, o espaço e o alho se curvam ao Camarão Supremo. Mas toda lenda pode renascer..."];
+var UD=[["Mais camarão por viagem, menos voltas à praia.", "Chega ao fundo da praia sem carregar peso.", "O primo Beto grita \"olha o camarão!\" por você.", "Camarão gelado o dia todo e pedalada de brinde."], ["O cheirinho de fritura atrai a praia inteira.", "A receita da vovó vira o prato mais pedido.", "Alguém para servir enquanto você frita.", "Música e mesas na areia: virou point."], ["Mais mãos na cozinha, mais pratos saindo.", "Ar-condicionado: o cliente fica e pede sobremesa.", "Um chef que transforma camarão em arte.", "A guia gastronômica visita e todo mundo comenta."], ["Camarão da casa, sem depender da pesca.", "Água oxigenada, camarões felizes e gordinhos.", "Ele cuida da saúde de cada larva.", "Camarão bem alimentado cresce rápido."], ["Outra praia, outra fila de clientes.", "Camarão fresco chegando em toda filial.", "Seu camarão ganha fama além-mar.", "Seu nome na fachada de cada capital."], ["Descasca mil camarões por minuto.", "Camarão fresco por meses, sem perder o sabor.", "Pacotes prontos para qualquer geladeira.", "Do viveiro ao supermercado em poucas horas."], ["Camarão que atravessa o oceano sem esquentar.", "Cargas inteiras rumo a outros continentes.", "Gente que fala outras línguas fechando negócio.", "Sem filas: seu cais, suas regras."], ["Camarões maiores e mais saborosos por design.", "Criação em alto-mar, a perder de vista.", "Em cada cidade, um cheirinho de alho conhecido.", "Entender o oceano para cuidar melhor dele."], ["Os detalhes minúsculos que fazem a diferença.", "Lê o código de cada camarão super.", "Uma mente brilhante e muito café.", "Crescimento acelerado em condições perfeitas."], ["Lista de espera de meses para jantar.", "O vinho certo para cada camarão.", "Um prêmio na parede, um sorriso na cozinha.", "A glória máxima da gastronomia."], ["Camarão crescendo ao sabor das ondas.", "Cultivo protegido no fundo do mar.", "Uma ilha inteira dedicada a camarões.", "Barcos levando e trazendo sem parar."], ["Seu camarão ao alcance de todo carrinho.", "Sem fila, só camarão saindo.", "Todo bairro agora tem o seu camarão.", "Corredores e corredores de camarão."], ["Camarão à vontade, de manhã à noite.", "Hóspedes que acordam com cheiro de mar.", "Quem leva a tripulação ao horizonte.", "Um hotel flutuante com o seu nome."], ["Cada ingresso é uma família sorrindo.", "Gritos de alegria e fome de camarão.", "Um camarão de pelúcia e filas de fotos.", "Dias de férias inesquecíveis no seu reino."], ["Todo mundo aprende a fazer seu camarão.", "Seu rosto na TV e seu camarão na mesa.", "A série mais maratonada do ano.", "Cinema, pipoca e... camarão empanado."], ["Todo o dinheiro bem guardado.", "Camarão rende até juros.", "Seu dinheiro trabalhando enquanto você dorme.", "O preço do camarão sai daqui."], ["Uma casinha para camarões e gente.", "Passeios vendo os camarões nadar ao redor.", "Ruas, lojas e escolas debaixo d'água.", "Uma cidade que nunca para, nem de noite."], ["A primeira casinha do camarão fora da Terra.", "Água, ar e camarão crescendo sem gravidade.", "Mais camarão chegando à Lua, mais rápido.", "Uma cratera inteira de produção."], ["Abrigo seguro contra as tempestades de areia.", "Leva carga por dunas vermelhas.", "Gelo derretido vira água para os viveiros.", "Marte agora tem restaurante, e é seu."], ["Energia sem fim para seus cultivos.", "Mais um quarto na estação, só de camarões.", "Subir ao espaço sem foguete.", "Um anel gigante girando em torno da Terra."], ["Descobre planetas com água para criar camarão.", "Carga de camarão entre as estrelas.", "Proteção para as rotas do camarão.", "Uma cidade inteira voando entre galáxias."], ["Um oceano criado só para seus camarões.", "Prédios, ruas e camarões a perder de vista.", "Fazendas orbitando como um colar.", "Um mundo inteiro dedicado ao camarão."], ["Um sol e todos os planetas com camarão.", "Centenas de estrelas, uma só receita.", "Um braço inteiro da galáxia com alho.", "Quem diria: a Via Láctea tem o seu tempero."], ["Um passo e você já está em outra realidade.", "Em outro universo, o camarão também reina.", "Todos os universos ligados por um só prato.", "O camarão atravessa tudo que existe."], ["Oferendas de alho e limão ao cosmos.", "Um trono de ouro com vista para a eternidade.", "A coroa que o próprio tempo respeita.", "Você é o camarão. O camarão é tudo."]];
+var sub=0,lastAc=0,RK={l:null,m:""},QN=null,TQ=[],TB=0,AU=null,lastSnd=0;
+var SND={s:1,v:1};try{SND=JSON.parse(localStorage.getItem("camarao_snd"))||SND}catch(e){}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function row(a,b){return '<div class="it"><div class="i"><b>'+a+'</b></div><b>'+b+'</b></div>'}
+function fmtT(s){s=Math.floor(s);var h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?h+"h "+m+"min":m+"min"}
+function toast(m){TQ.push(m);if(!TB)toastNext()}
+function toastNext(){var m=TQ.shift(),e=document.getElementById("toast");if(!m){TB=0;e.style.display="none";return}TB=1;e.textContent=m;e.style.display="block";setTimeout(toastNext,2800)}
+/* sons e vibração */
+function sfx(k){
+  var nv=window.navigator;
+  if(SND.v&&nv&&nv.vibrate&&(k=="tap"||k=="adv"||k=="ach")){try{nv.vibrate(k=="tap"?8:60)}catch(e){}}
+  if(!SND.s)return;
+  var n=Date.now();if(k=="tap"&&n-lastSnd<70)return;lastSnd=n;
+  try{
+    if(!AU)AU=new (window.AudioContext||window.webkitAudioContext)();
+    if(AU.state=="suspended")AU.resume();
+    var T={tap:[[520,.04]],buy:[[440,.06],[660,.08]],adv:[[523,.1],[659,.1],[784,.1],[1047,.2]],ach:[[784,.1],[988,.1],[1319,.25]],ev:[[660,.08],[880,.1]]}[k]||[];
+    var t=AU.currentTime;
+    T.forEach(function(x){var o=AU.createOscillator(),g=AU.createGain();o.type="sine";o.frequency.value=x[0];g.gain.setValueAtTime(.06,t);g.gain.exponentialRampToValueAtTime(.0001,t+x[1]);o.connect(g);g.connect(AU.destination);o.start(t);o.stop(t+x[1]);t+=x[1]*.9});
+  }catch(e){}
+}
+function sndRender(){document.getElementById("sndb").textContent=SND.s?"🔊 Som: ligado":"🔇 Som: desligado";document.getElementById("vibb").textContent=SND.v?"📳 Vibração: ligada":"📴 Vibração: desligada"}
+function sndSave(){try{localStorage.setItem("camarao_snd",JSON.stringify(SND))}catch(e){}sndRender()}
+document.getElementById("sndb").onclick=function(){SND.s=SND.s?0:1;sndSave();sfx("buy")};
+document.getElementById("vibb").onclick=function(){SND.v=SND.v?0:1;sndSave();sfx("ach")};
+sndRender();
+/* contadores */
+function bought(){G.st.bu++;dqAdd("bu",1);sfx("buy")}
+function freeUsed(){G.st.fr++;dqAdd("fr",1);sfx("buy")}
+function advanced(){dqAdd("ad",1);sfx("adv");if(G.s>G.st.mx)G.st.mx=G.s;toast("🚀 "+S[G.s].e+" "+S[G.s].n)}
+function statTick(dt){
+  G.st.ge+=dps()*dt;
+  if(!document.hidden&&dt<5){G.st.ts+=dt;dqAdd("tm",dt)}
+  var n=Date.now();if(n-lastAc>1000){lastAc=n;dqEnsure();acCheck()}
+}
+/* conquistas: cada uma dá +2% de renda */
+var AC=[
+["tp1","👆","Primeiros toques","Dê 100 toques",function(){return G.st.tp>=100}],
+["tp2","🖐️","Dedo de ouro","Dê 1.000 toques",function(){return G.st.tp>=1e3}],
+["tp3","💪","Mão de camarão","Dê 10.000 toques",function(){return G.st.tp>=1e4}],
+["tp4","🏋️","Lenda do toque","Dê 100.000 toques",function(){return G.st.tp>=1e5}],
+["mx5","🍽️","Empresário","Chegue ao estágio 5",function(){return G.st.mx>=4}],
+["mx10","⭐","Estrela da gastronomia","Chegue ao estágio 10",function(){return G.st.mx>=9}],
+["mx15","📺","Celebridade","Chegue ao estágio 15",function(){return G.st.mx>=14}],
+["mx20","🛰️","Astronauta","Chegue ao estágio 20",function(){return G.st.mx>=19}],
+["mx25","👑","Camarão Supremo","Chegue ao estágio 25",function(){return G.st.mx>=24}],
+["nr1","🔄","Renascido","Renasça pela 1ª vez",function(){return G.nr>=1}],
+["nr5","♻️","Ciclo sem fim","Renasça 5 vezes",function(){return G.nr>=5}],
+["nr10","🌀","Mestre dos ciclos","Renasça 10 vezes",function(){return G.nr>=10}],
+["nr25","🌌","Eterno","Renasça 25 vezes",function(){return G.nr>=25}],
+["pl10","🐚","Colecionador","Ganhe 10 pérolas",function(){return G.st.pl>=10}],
+["pl100","🦪","Tesouro do mar","Ganhe 100 pérolas",function(){return G.st.pl>=100}],
+["pl1000","💎","Joalheiro","Ganhe 1.000 pérolas",function(){return G.st.pl>=1e3}],
+["ev1","🎲","Sorte grande","Aproveite 1 evento",function(){return G.st.ev>=1}],
+["ev10","🎰","Sortudo","Aproveite 10 eventos",function(){return G.st.ev>=10}],
+["ev50","🍀","Amigo da sorte","Aproveite 50 eventos",function(){return G.st.ev>=50}],
+["ts1","⏱️","Dedicado","Jogue por 1 hora",function(){return G.st.ts>=3600}],
+["ts10","⌛","Viciado em camarão","Jogue por 10 horas",function(){return G.st.ts>=36e3}],
+["bu100","🛠️","Investidor","Compre 100 melhorias",function(){return G.st.bu>=100}],
+["bu1000","🏗️","Construtor","Compre 1.000 melhorias",function(){return G.st.bu>=1e3}],
+["ge9","💰","Bilionário","Ganhe R$ 1 bilhão no total",function(){return G.st.ge>=1e9}]
+];
+function acCount(){return Object.keys(G.ac||{}).length}
+function acMult(){return 1+.02*acCount()}
+function acCheck(){AC.forEach(function(a){if(!G.ac[a[0]]&&a[4]()){G.ac[a[0]]=1;toast("🏆 Conquista: "+a[2]+" (+2% renda)");sfx("ach");save()}})}
+/* missões diárias */
+var QP=[
+ {k:"tp",ic:"👆",n:"Dê 300 toques",t:300},
+ {k:"bu",ic:"🛠️",n:"Compre 20 melhorias",t:20},
+ {k:"ev",ic:"🎲",n:"Aproveite 2 eventos",t:2},
+ {k:"fr",ic:"🍤",n:"Use a loja grátis 2 vezes",t:2},
+ {k:"tm",ic:"⏱️",n:"Jogue por 10 minutos",t:600},
+ {k:"ad",ic:"🚀",n:"Avance 1 estágio",t:1}
+];
+function dqToday(){var d=new Date();return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()}
+function dqEnsure(){var d=dqToday();if(G.dq.d!=d){G.dq={d:d,p:{},c:{},a:0};QN=null}}
+function dqAdd(k,n){dqEnsure();G.dq.p[k]=(G.dq.p[k]||0)+n}
+function dqList(){
+  dqEnsure();if(QN&&QN.d==G.dq.d)return QN.l;
+  var p=QP.slice(),seed=0,s=G.dq.d,l=[];
+  for(var i=0;i<s.length;i++)seed=(seed*31+s.charCodeAt(i))%233280;
+  for(var j=0;j<3;j++){seed=(seed*9301+49297)%233280;l.push(p.splice(seed%p.length,1)[0])}
+  QN={d:G.dq.d,l:l};return l;
+}
+function claimQ(i){
+  var q=dqList()[i];if(!q||G.dq.c[i]||(G.dq.p[q.k]||0)<q.t)return;
+  var g=Math.max(dps()*300,click()*100);G.m+=g;G.dq.c[i]=1;sfx("ach");toast("📅 Missão cumprida: +R$ "+fmt(g));
+  if(G.dq.c[0]&&G.dq.c[1]&&G.dq.c[2]&&!G.dq.a){G.dq.a=1;G.pe++;G.st.pl++;toast("🐚 Todas as missões: +1 pérola!")}
+  save();
+}
+/* ranking (nuvem) */
+function nickGet(){return G.nick||("Camarão"+(US?US.uid.slice(-4):"0000"))}
+function rkScore(){return (G.st.mx+1)*1e7+Math.min(G.st.pl,9999999)}
+function rkPush(){
+  if(!US||!FB)return;
+  try{FB.d.collection("ranking").doc(US.uid).set({n:nickGet(),sc:rkScore(),mx:G.st.mx,pl:G.st.pl,t:Date.now()}).catch(function(){})}catch(e){}
+}
+function rkLoad(){
+  if(!cloudOn()){RK.m="O ranking funciona no site, entrando com a conta Google.";return}
+  if(!US||!FB){RK.m="Entre com o Google no menu ⚙️ para ver e participar do ranking.";return}
+  RK.m="Carregando...";RK.l=null;rkPush();
+  FB.d.collection("ranking").orderBy("sc","desc").limit(20).get().then(function(q){
+    RK.l=q.docs.map(function(d){var x=d.data();return{id:d.id,n:x.n,mx:x.mx,pl:x.pl}});RK.m="";render()
+  }).catch(function(){RK.m="Não foi possível carregar o ranking. Confira as regras do Firestore.";render()});
+  render();
+}
+function nickSave(){
+  var v=document.getElementById("nk");if(!v)return;
+  G.nick=String(v.value).replace(/[<>&"'\/\\]/g,"").trim().slice(0,16);save();rkPush();toast("Apelido salvo");rkLoad();
+}
+/* telas da aba Mais */
+function viewMissions(){
+  var h='<div class="rs">Missões de hoje (renovam à meia-noite). Cumprindo as 3: +1 pérola 🐚</div>';
+  dqList().forEach(function(q,i){
+    var p=Math.min(q.t,G.dq.p[q.k]||0),done=p>=q.t,cl=G.dq.c[i];
+    var pt=q.k=="tm"?Math.floor(p/60)+"/"+q.t/60+" min":Math.floor(p)+"/"+q.t;
+    h+=item(q.ic,q.n,"Progresso: "+pt+" · recompensa: 5 min de renda",cl?"✅":"Resgatar",done&&!cl,"mq_"+i)});
+  return h;
+}
+function viewAch(){
+  var n=acCount(),h='<div class="rs">🏆 '+n+'/'+AC.length+' conquistas · bônus de renda +'+n*2+'%</div>';
+  AC.forEach(function(a){var ok=G.ac[a[0]];
+    h+='<div class="it"'+(ok?'':' style="opacity:.55"')+'><div style="font-size:26px">'+(ok?a[1]:'🔒')+'</div><div class="i"><b>'+a[2]+'</b><small>'+a[3]+'</small></div></div>'});
+  return h;
+}
+function viewStats(){
+  var s=G.st;
+  return row("⏱️ Tempo jogado",fmtT(s.ts))+row("👆 Toques",fmt(s.tp))+row("🛠️ Melhorias compradas",fmt(s.bu))+row("🎲 Eventos aproveitados",s.ev)+row("🚀 Estágio máximo",(s.mx+1)+"/"+S.length)+row("🔄 Renascimentos",G.nr)+row("🐚 Pérolas ganhas (total)",fmt(s.pl))+row("💰 Dinheiro ganho (total)","R$ "+fmt(s.ge))+row("🏆 Conquistas",acCount()+"/"+AC.length)+row("⚠️ Dificuldade","×"+fx(dif()));
+}
+function viewRank(){
+  var h='<div class="rs">Ranking: estágio mais alto e pérolas. Só aparece o apelido que você escolher.</div>';
+  if(RK.m)h+='<div class="rs">'+RK.m+'</div>';
+  if(US&&cloudOn()){
+    h+='<div class="it"><div class="i"><small style="margin:0 0 4px">Seu apelido (máx. 16 letras)</small><input id="nk" maxlength="16" value="'+esc(nickGet())+'" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx)"></div><button id="nks">Salvar</button></div>';
+    h+='<button class="wide" id="rkr">🔄 Atualizar ranking</button>';
+  }
+  if(RK.l)RK.l.forEach(function(r,i){
+    var me=US&&r.id==US.uid,md=["🥇","🥈","🥉"][i]||(i+1)+"º";
+    h+='<div class="it"'+(me?' style="border-color:var(--ac)"':'')+'><div style="font-size:20px;min-width:34px">'+md+'</div><div class="i"><b>'+esc(r.n||"?")+'</b><small>Estágio '+((r.mx||0)+1)+' · 🐚 '+(r.pl||0)+'</small></div></div>'});
+  return h;
+}
+function moreView(){
+  var nm=["📅 Missões","🏆 Conquistas","📊 Stats","🌐 Ranking"],h='<div class="sn">';
+  nm.forEach(function(n,i){h+='<button data-sub="'+i+'"'+(i==sub?' class="on"':'')+'>'+n+'</button>'});
+  return h+'</div>'+[viewMissions,viewAch,viewStats,viewRank][sub]();
+}
 render();
 </script>
 </body>
