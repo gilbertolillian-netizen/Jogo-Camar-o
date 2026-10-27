@@ -57,10 +57,19 @@ em{font-style:italic;color:var(--tx);opacity:.85}
 .sn button{flex:1 1 30%;padding:9px 4px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-weight:600;font-size:13px}
 .sn button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
 #toast{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:50%;transform:translateX(-50%);background:var(--card);color:var(--tx);border:2px solid var(--ac);border-radius:12px;padding:8px 14px;z-index:6;display:none;max-width:90vw;font-size:14px;font-weight:600;text-align:center;box-shadow:0 4px 16px #0006}
-#btn.sk1{border-color:#ffc107;background:radial-gradient(circle at 35% 30%,#fff6c8,#ffd54f 55%,#c79100);box-shadow:0 0 18px #ffc10799}
-#btn.sk2{border-color:var(--ac);background:radial-gradient(circle at 35% 30%,#fff,#f6e6f4 55%,#d9c4e8);box-shadow:0 0 18px #e8c9f2aa}
-#btn.sk3{border-radius:28%;background:#0b0f1a;border-color:var(--ac);box-shadow:0 0 22px var(--ac),inset 0 0 18px var(--ac)}
-#btn.sk4{border-radius:60% 40% 55% 45%/50% 55% 45% 50%;border-color:#4dd0e1;background:radial-gradient(circle at 30% 25%,#e0f7fa,#4dd0e1 60%,#0097a7);box-shadow:0 0 18px #4dd0e199}
+#btn.sk1{border-color:#ffc107;background:linear-gradient(115deg,rgba(255,255,255,0) 35%,rgba(255,251,230,.75) 50%,rgba(255,255,255,0) 65%) 150% 0/250% 100% no-repeat,radial-gradient(circle at 35% 30%,#fff6c8,#ffd54f 55%,#c79100);box-shadow:0 0 18px #ffc10799;animation:shim 3.2s linear infinite,glo1 2s ease-in-out infinite alternate}
+#btn.sk2{border-color:var(--ac);background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.95) 0,rgba(255,255,255,0) 24%) 0 0/200% 200% no-repeat,radial-gradient(circle at 35% 30%,#fff,#f6e6f4 55%,#d9c4e8);box-shadow:0 0 18px #e8c9f2aa;animation:wand 5s ease-in-out infinite,glo2 2.4s ease-in-out infinite alternate}
+#btn.sk3{border-radius:28%;background:#0b0f1a;border-color:var(--ac);box-shadow:0 0 22px var(--ac),inset 0 0 18px var(--ac);animation:neon 1.6s ease-in-out infinite alternate}
+#btn.sk4{border-radius:60% 40% 55% 45%/50% 55% 45% 50%;border-color:#4dd0e1;background:radial-gradient(circle at 30% 25%,#e0f7fa,#4dd0e1 60%,#0097a7);box-shadow:0 0 18px #4dd0e199;animation:blob 6s ease-in-out infinite,flt 3s ease-in-out infinite alternate,glo4 2.4s ease-in-out infinite alternate}
+@keyframes shim{from{background-position:150% 0,0 0}to{background-position:-50% 0,0 0}}
+@keyframes glo1{from{box-shadow:0 0 12px #ffc10766}to{box-shadow:0 0 30px #ffd54fcc}}
+@keyframes wand{0%{background-position:0% 0%,0 0}25%{background-position:100% 0%,0 0}50%{background-position:100% 100%,0 0}75%{background-position:0% 100%,0 0}100%{background-position:0% 0%,0 0}}
+@keyframes glo2{from{box-shadow:0 0 12px #e8c9f288}to{box-shadow:0 0 28px #f6d5ffcc}}
+@keyframes neon{from{box-shadow:0 0 10px var(--ac),0 0 0 rgba(255,255,255,0),inset 0 0 8px var(--ac)}to{box-shadow:0 0 34px var(--ac),0 0 6px #fff,inset 0 0 24px var(--ac)}}
+@keyframes blob{0%,100%{border-radius:60% 40% 55% 45%/50% 55% 45% 50%}33%{border-radius:45% 55% 40% 60%/55% 45% 55% 45%}66%{border-radius:55% 45% 60% 40%/45% 55% 50% 50%}}
+@keyframes flt{from{translate:0 0}to{translate:0 -5px}}
+@keyframes glo4{from{box-shadow:0 0 12px #4dd0e166}to{box-shadow:0 0 30px #4dd0e1cc}}
+@media (prefers-reduced-motion:reduce){#btn.sk1,#btn.sk2,#btn.sk3,#btn.sk4{animation:none}}
 #don textarea,#don input{width:100%;padding:8px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font-size:12px;margin-top:6px;resize:none}
 </style>
 </head>
