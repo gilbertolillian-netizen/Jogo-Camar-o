@@ -38,8 +38,8 @@ body{max-width:520px;margin:0 auto;padding:12px}
 .rs a{color:var(--tx)}
 
 .gear{position:absolute;right:6px;top:4px;background:none;border:0;font-size:22px;cursor:pointer;padding:4px}
-#cfg,#shop{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;z-index:5}
-#cfg.on,#shop.on{display:flex}
+#cfg,#shop,#don{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;z-index:5}
+#cfg.on,#shop.on,#don.on{display:flex}
 .box{background:var(--card);color:var(--tx);border-radius:16px;padding:16px;width:min(92vw,380px);max-height:90vh;overflow:auto}
 .box b{font-size:17px}.box .row{margin-top:14px}.box small{display:block;color:var(--mu);margin-bottom:6px}
 .seg{display:flex;gap:6px}
@@ -57,6 +57,11 @@ em{font-style:italic;color:var(--tx);opacity:.85}
 .sn button{flex:1 1 30%;padding:9px 4px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-weight:600;font-size:13px}
 .sn button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
 #toast{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:50%;transform:translateX(-50%);background:var(--card);color:var(--tx);border:2px solid var(--ac);border-radius:12px;padding:8px 14px;z-index:6;display:none;max-width:90vw;font-size:14px;font-weight:600;text-align:center;box-shadow:0 4px 16px #0006}
+#btn.sk1{border-color:#ffc107;background:radial-gradient(circle at 35% 30%,#fff6c8,#ffd54f 55%,#c79100);box-shadow:0 0 18px #ffc10799}
+#btn.sk2{border-color:var(--ac);background:radial-gradient(circle at 35% 30%,#fff,#f6e6f4 55%,#d9c4e8);box-shadow:0 0 18px #e8c9f2aa}
+#btn.sk3{border-radius:28%;background:#0b0f1a;border-color:var(--ac);box-shadow:0 0 22px var(--ac),inset 0 0 18px var(--ac)}
+#btn.sk4{border-radius:60% 40% 55% 45%/50% 55% 45% 50%;border-color:#4dd0e1;background:radial-gradient(circle at 30% 25%,#e0f7fa,#4dd0e1 60%,#0097a7);box-shadow:0 0 18px #4dd0e199}
+#don textarea,#don input{width:100%;padding:8px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font-size:12px;margin-top:6px;resize:none}
 </style>
 </head>
 <body>
@@ -73,9 +78,11 @@ em{font-style:italic;color:var(--tx);opacity:.85}
 <div class="tabs"><button id="t0" class="on">Melhorias</button><button id="t1">Grátis</button><button id="t2">Renascer</button><button id="t3">Mais</button></div>
 <div id="list"></div>
 <div class="rs" id="dl"><a href="https://github.com/gilbertolillian-netizen/Jogo-Camar-o/releases/latest/download/camarao-tycoon.apk">📲 Baixar o app para Android (APK)</a><br>Depois de baixar, permita instalar de fontes desconhecidas.</div>
+<div class="rs" id="donl" style="display:none"><a href="#" id="donl2">💛 Apoiar o projeto</a></div>
 <div id="cfg"><div class="box">
   <b>⚙️ Configurações</b>
   <div class="row"><small>Tema</small><div class="seg"><button data-th="auto">Automático</button><button data-th="light">Claro</button><button data-th="dark">Escuro</button></div></div>
+  <div class="row" id="donrow" style="display:none"><button class="wide" id="donb" style="margin-top:0">💛 Apoiar o projeto</button></div>
   <div class="row"><small>Som e vibração</small><div class="seg"><button id="sndb"></button><button id="vibb"></button></div></div>
   <div class="row" id="acc" style="display:none"><small>Conta Google (salva o progresso na nuvem)</small><div id="accb"></div><div id="accm"></div></div>
   <div class="row"><button id="reset" class="wide">Reiniciar jogo</button><button id="cx" class="wide">Fechar</button></div>
@@ -83,7 +90,9 @@ em{font-style:italic;color:var(--tx);opacity:.85}
 <div id="shop"><div class="box" id="shopbox"></div></div>
 <div id="ev"></div>
 <div id="toast"></div>
+<div id="don"><div class="box" id="donbox"></div></div>
 <script src="firebase-config.js"></script>
+<script src="donate-config.js"></script>
 <script>
 var K=60;
 var NM=[
@@ -119,7 +128,7 @@ function def(){return fixG({m:0,s:0,o:[0,0,0,0],cl:0,pm:1,t:Date.now(),bt:0,fc:0
 function load(){try{var r=localStorage.getItem(SK);if(r){var d=JSON.parse(r);if(d&&d.o)return fixG(d)}}catch(e){}return def()}
 function save(){try{G.t=Date.now();localStorage.setItem(SK,JSON.stringify(G))}catch(e){}}
 function fmt(n){var u=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc"],i=0;while(n>=1000&&i<11){n/=1000;i++}if(n>=1000)return (n*Math.pow(1000,i)).toExponential(2).replace("+","");return (n<10&&i?n.toFixed(2):n<100&&i?n.toFixed(1):Math.floor(n))+u[i]}
-function mult(){return G.pm*(Date.now()<G.bt?2:1)*Math.pow(1.5,lv("re"))*efm("inc")*acMult()}
+function mult(){return G.pm*(Date.now()<G.bt?2:1)*Math.pow(1.5,lv("re"))*efm("inc")*acMult()*dnm()}
 function dps(){var s=S[G.s],t=0;for(var i=0;i<4;i++)t+=G.o[i]*s.g[i][2];return t*mult()}
 function click(){return S[G.s].cb*(1+G.cl)*mult()*Math.pow(2,lv("to"))*efm("tap")}
 function gc(i){return Math.ceil(S[G.s].g[i][1]*Math.pow(1.15,G.o[i])*Math.pow(.95,lv("de")))}
@@ -130,7 +139,7 @@ function setBg(i){var b=BG[i];document.getElementById("bg").style.background='ur
 var TI=["🦐", "🍤", "🥘", "🌊", "🏙️", "🏭", "🚢", "🌍", "🧬", "⭐", "⚓", "🛒", "🛳️", "🎡", "📺", "💰", "🐙", "🌙", "🔴", "🛰️", "🚀", "🪐", "🌌", "🌀", "👑"],TC=["#ff6b4a", "#e8a317", "#d4572a", "#1e96c8", "#8e44ad", "#546e7a", "#0277bd", "#d4a017", "#2e9e6a", "#b8860b", "#00838f", "#2e7d32", "#1565c0", "#e91e63", "#7b1fa2", "#388e3c", "#00acc1", "#78909c", "#c1440e", "#5c6bc0", "#3949ab", "#ef6c00", "#6a1b9a", "#00bfa5", "#ffc107"];
 function render(){
   var s=S[G.s];
-  var bt=document.getElementById("btn");
+  var bt=document.getElementById("btn");skinApply();
   if(bt.dataset.s!=String(G.s)){bt.dataset.s=G.s;bt.textContent=TI[G.s];setBg(G.s);document.documentElement.style.setProperty("--ac",TC[G.s]);document.getElementById("sd").textContent=CH?"“"+CH[G.s]+"”":""}
   document.getElementById("st").textContent=s.e+" Estágio "+(G.s+1)+"/"+S.length+" · "+s.n;
   document.getElementById("mo").textContent="R$ "+fmt(G.m);
@@ -266,7 +275,8 @@ var SH=[
 function dif(){return 1+.2*((G&&G.nr)||0)}
 function fixG(d){d.pu=d.pu||{};d.pe=d.pe||0;d.nr=d.nr||0;d.sh=d.sh||0;d.rs=d.rs||0;d.sp=d.sp||0;d.nick=d.nick||"";
   d.st=d.st||{};["tp","ts","ev","ge","pl","bu","fr","mx"].forEach(function(k){d.st[k]=d.st[k]||0});d.st.mx=Math.max(d.st.mx,d.s||0);
-  d.ac=d.ac||{};d.dq=d.dq||{d:"",p:{},c:{},a:0};return d}
+  d.ac=d.ac||{};d.dq=d.dq||{d:"",p:{},c:{},a:0};
+  d.dn=d.dn||{};d.dn.until=d.dn.until||0;d.dn.used=d.dn.used||[];d.dn.sk=d.dn.sk||[];d.dn.sel=d.dn.sel||0;return d}
 function lv(k){return (G&&G.pu&&G.pu[k])||0}
 function fx(n){return n<1000?n.toFixed(1).replace(".",","):fmt(n)}
 function shCost(x){return Math.ceil(x.b*Math.pow(x.r,lv(x.k)))}
@@ -307,6 +317,7 @@ function efm(k){var f=EF&&EF[k];return f&&Date.now()<f.u?f.m:1}
 function setEf(k,m,sec){EF[k]={m:m,u:Date.now()+sec*1000}}
 function boText(b){
   var o=[];if(b)o.push("🔥 Banquete ×2 ("+Math.ceil((G.bt-Date.now())/1000)+"s)");
+  if(dnm()>1){var r=G.dn.until-Date.now(),dd=Math.floor(r/864e5),hh=Math.floor(r%864e5/36e5);o.push("💛 Apoiador ×2 ("+(dd?dd+"d ":"")+hh+"h)")}
   [["inc","renda"],["tap","toque"]].forEach(function(x){var f=EF[x[0]];
     if(f&&Date.now()<f.u)o.push((f.m>1?"✨ ":"⚠️ ")+x[1]+" ×"+String(f.m).replace(".",",")+" ("+Math.ceil((f.u-Date.now())/1000)+"s)")});
   return o.join(" · ");
@@ -515,6 +526,82 @@ function moreView(){
   nm.forEach(function(n,i){h+='<button data-sub="'+i+'"'+(i==sub?' class="on"':'')+'>'+n+'</button>'});
   return h+'</div>'+[viewMissions,viewAch,viewStats,viewRank][sub]();
 }
+
+/* ===== Apoio ao projeto: Pix + código de apoiador (renda x2 por 7 dias e skins) ===== */
+var SKN=["Ouro","Pérola","Neon","Oceano"],DONV=5,DONM="";
+function donOn(){return !!(window.DON&&DON.pix&&DON.pub)}
+function dnm(){return G&&G.dn&&Date.now()<G.dn.until?2:1}
+function skinApply(){var bt=document.getElementById("btn"),k=(G.dn&&G.dn.sel)?"sk"+G.dn.sel:"";if(bt.className!==k)bt.className=k}
+function crc16(s){var c=0xFFFF;for(var i=0;i<s.length;i++){c^=s.charCodeAt(i)<<8;for(var j=0;j<8;j++)c=(c&0x8000)?((c<<1)^0x1021):(c<<1);c&=0xFFFF}return ("000"+c.toString(16).toUpperCase()).slice(-4)}
+function tlv(id,v){var l=String(v.length);return id+(l.length<2?"0"+l:l)+v}
+function pixClean(s,n){return String(s).normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Za-z0-9 ]/g,"").toUpperCase().slice(0,n)}
+function pixPayload(v){
+  var m=tlv("00","br.gov.bcb.pix")+tlv("01",DON.pix);
+  var p=tlv("00","01")+tlv("01","11")+tlv("26",m)+tlv("52","0000")+tlv("53","986")+(v?tlv("54",v.toFixed(2)):"")+tlv("58","BR")+tlv("59",pixClean(DON.nome||"APOIO",25))+tlv("60",pixClean(DON.cidade||"BRASIL",15))+tlv("62",tlv("05","***"))+"6304";
+  return p+crc16(p);
+}
+function b64u(s){s=s.replace(/-/g,"+").replace(/_/g,"/");while(s.length%4)s+="=";var b=atob(s),a=new Uint8Array(b.length);for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a}
+function idHash(s){var h=7;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))%1000003;return h}
+function redeemCode(code){
+  return new Promise(function(ok){
+    try{
+      var p=String(code).replace(/\s+/g,"").split(".");
+      if(p.length!=3||p[0]!="CAM1")return ok("Código inválido.");
+      var pr=p[1].split("-"),id=pr[0],dia=+pr[1];
+      if(!id||!(dia>0))return ok("Código inválido.");
+      var sub=window.crypto&&window.crypto.subtle;if(!sub)return ok("Este aparelho não consegue validar o código (precisa de conexão segura).");
+      sub.importKey("jwk",DON.pub,{name:"ECDSA",namedCurve:"P-256"},false,["verify"]).then(function(k){
+        return sub.verify({name:"ECDSA",hash:"SHA-256"},k,b64u(p[2]),new TextEncoder().encode(p[0]+"."+p[1]))
+      }).then(function(v){
+        if(!v)return ok("Código inválido.");
+        if(Date.now()/864e5-dia>60)return ok("Este código expirou (vale por 60 dias).");
+        if(G.dn.used.indexOf(id)>=0)return ok("Este código já foi usado.");
+        G.dn.used.push(id);G.dn.until=Math.max(Date.now(),G.dn.until)+7*864e5;
+        var av=[1,2,3,4].filter(function(x){return G.dn.sk.indexOf(x)<0}),msg="ok";
+        if(av.length){var n=av[idHash(id)%av.length];G.dn.sk.push(n);G.dn.sel=n;msg="ok:"+n}
+        save();sfx("ach");render();ok(msg)
+      }).catch(function(){ok("Código inválido.")});
+    }catch(e){ok("Código inválido.")}
+  });
+}
+function copyTxt(s){
+  function fb(){try{var a=document.createElement("textarea");a.value=s;(document.body||document.documentElement).appendChild(a);a.select();document.execCommand("copy");a.remove();toast("Copiado!")}catch(e){toast("Não consegui copiar. Segure o texto para copiar.")}}
+  try{var nv=window.navigator;if(nv&&nv.clipboard&&nv.clipboard.writeText){nv.clipboard.writeText(s).then(function(){toast("Copiado!")},fb);return}}catch(e){}
+  fb();
+}
+function donRender(){
+  var v=DONV,c=String(DON.contato||""),h='<b>💛 Apoiar o projeto</b>';
+  h+='<div class="rs" style="text-align:left">Este jogo é feito por uma pessoa só. Seu apoio ajuda a pagar hospedagem e conta de desenvolvedor, e financia novos estágios, eventos e melhorias.</div>';
+  h+='<div class="rs" style="text-align:left">🎁 Quem apoiar com <b>R$ 5 ou mais</b> recebe <b>renda ×2 por 7 dias</b> e uma <b>skin sorteada</b> para os ícones das fases. São 4 skins no total, e cada novo apoio sorteia uma que você ainda não tem.</div>';
+  h+='<div class="row"><small>1. Escolha o valor e pague pelo Pix</small><div class="sn">'+[5,10,20,0].map(function(x){return '<button data-v="'+x+'"'+(x==v?' class="on"':'')+'>'+(x?"R$ "+x:"Outro valor")+'</button>'}).join("")+'</div>';
+  h+='<textarea readonly rows="3">'+pixPayload(v)+'</textarea><button class="wide" id="donc">📋 Copiar Pix copia e cola</button><button class="wide" id="donk">🔑 Copiar a chave Pix</button></div>';
+  h+='<div class="row"><small>2. Receba o seu código</small><div class="rs" style="text-align:left">Depois de pagar, envie o comprovante para: <b>'+(/^https?:/.test(c)?'<a href="'+esc(c)+'" target="_blank" rel="noopener">'+esc(c)+'</a>':esc(c))+'</b>. Você recebe um código de apoiador.</div></div>';
+  h+='<div class="row"><small>3. Resgate o código</small><input id="donin" placeholder="Cole o código aqui" autocomplete="off"><button class="wide" id="donr">Resgatar</button>'+(DONM?'<div class="rs" style="text-align:left">'+DONM+'</div>':'')+'</div>';
+  var tem=G.dn.sk.length;
+  h+='<div class="row"><small>Suas skins ('+tem+'/4)'+(dnm()>1?" · 💛 renda ×2 ativa":"")+'</small><div class="sn"><button data-sk="0"'+(G.dn.sel==0?' class="on"':'')+'>Padrão</button>';
+  SKN.forEach(function(n,i){var has=G.dn.sk.indexOf(i+1)>=0;h+='<button data-sk="'+(i+1)+'"'+(G.dn.sel==i+1?' class="on"':'')+(has?"":" disabled")+'>'+(has?n:"🔒 ?")+'</button>'});
+  h+='</div></div><button class="wide" id="donx">Fechar</button>';
+  document.getElementById("donbox").innerHTML=h;
+}
+function donOpen(){document.getElementById("cfg").className="";DONM="";donRender();document.getElementById("don").className="on"}
+document.getElementById("donbox").addEventListener("click",function(e){
+  var t=e.target.closest("button");if(!t)return;
+  if(t.dataset.v!==undefined){DONV=+t.dataset.v;donRender();return}
+  if(t.dataset.sk!==undefined){if(t.disabled)return;G.dn.sel=+t.dataset.sk;save();skinApply();donRender();return}
+  if(t.id=="donc"){copyTxt(pixPayload(DONV));return}
+  if(t.id=="donk"){copyTxt(DON.pix);return}
+  if(t.id=="donx"){document.getElementById("don").className="";return}
+  if(t.id=="donr"){
+    var c=document.getElementById("donin").value;
+    redeemCode(c).then(function(m){
+      DONM=m.slice(0,2)=="ok"?(m.length>2?"✅ Código aceito! Renda ×2 por 7 dias e a skin "+SKN[+m.slice(3)-1]+" liberada. Obrigado pelo apoio! 💛":"✅ Código aceito! Renda ×2 por mais 7 dias. Você já tem todas as skins. Obrigado! 💛"):"⚠️ "+m;
+      donRender();
+    });
+  }
+});
+document.getElementById("don").addEventListener("click",function(e){if(e.target.id=="don")e.target.className=""});
+if(donOn()){["donrow","donl"].forEach(function(id){document.getElementById(id).style.display="block"});
+  document.getElementById("donb").onclick=donOpen;document.getElementById("donl2").onclick=function(e){e.preventDefault();donOpen()}}
 render();
 </script>
 </body>

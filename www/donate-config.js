@@ -1,8 +1,8 @@
 window.DON={
  "pix": "d91688cc-5e2c-4f38-ae4f-bfd596b241d1",
- "nome": "Gilberto Pereira Garcia Neto",
- "cidade": "Natal/RN",
- "contato": "whatsapp 84996229479",
+ "nome": "Gilberto Garcia Neto",
+ "cidade": "Natal",
+ "contato": "https://wa.me/5584996229479",
  "pub": {
   "kty": "EC",
   "crv": "P-256",
