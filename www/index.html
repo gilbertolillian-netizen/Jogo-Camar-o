@@ -69,7 +69,10 @@ em{font-style:italic;color:var(--tx);opacity:.85}
 @keyframes blob{0%,100%{border-radius:60% 40% 55% 45%/50% 55% 45% 50%}33%{border-radius:45% 55% 40% 60%/55% 45% 55% 45%}66%{border-radius:55% 45% 60% 40%/45% 55% 50% 50%}}
 @keyframes flt{from{translate:0 0}to{translate:0 -5px}}
 @keyframes glo4{from{box-shadow:0 0 12px #4dd0e166}to{box-shadow:0 0 30px #4dd0e1cc}}
-@media (prefers-reduced-motion:reduce){#btn.sk1,#btn.sk2,#btn.sk3,#btn.sk4{animation:none}}
+#btn.mor{position:relative}
+#btn.mor::after{content:"";position:absolute;right:0;bottom:4px;width:54px;height:54px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 60C13 47 6 31 11 21c3-7 13-9 21-4 8-5 18-3 21 4 5 10-2 26-21 39z' fill='%23ff3d71' stroke='%23b3124a' stroke-width='2.5' stroke-linejoin='round'/%3E%3Cpath d='M32 17c-2-6-8-9-13-8 3 3 6 5 13 8zM32 17c2-6 8-9 13-8-3 3-6 5-13 8zM32 17c-3-3-3-8 0-11 3 3 3 8 0 11z' fill='%233fa34d' stroke='%232a7a35' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cellipse cx='21' cy='28' rx='4' ry='7' fill='%23fff' opacity='.5' transform='rotate(-25 21 28)'/%3E%3Cg fill='%23ffe082'%3E%3Cellipse cx='23' cy='35' rx='1.8' ry='2.6'/%3E%3Cellipse cx='33' cy='31' rx='1.8' ry='2.6'/%3E%3Cellipse cx='43' cy='34' rx='1.8' ry='2.6'/%3E%3Cellipse cx='28' cy='43' rx='1.8' ry='2.6'/%3E%3Cellipse cx='38' cy='43' rx='1.8' ry='2.6'/%3E%3Cellipse cx='33' cy='52' rx='1.8' ry='2.6'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat;pointer-events:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));animation:mfl 2.4s ease-in-out infinite alternate}
+@keyframes mfl{from{transform:translateY(0) rotate(-4deg)}to{transform:translateY(-5px) rotate(4deg)}}
+@media (prefers-reduced-motion:reduce){#btn.sk1,#btn.sk2,#btn.sk3,#btn.sk4,#btn.mor::after{animation:none}}
 input[type=range]{accent-color:var(--ac)}
 #don textarea,#don input{width:100%;padding:8px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font-size:12px;margin-top:6px;resize:none}
 .sn.q button{flex:1 1 20%}
@@ -302,7 +305,7 @@ function fixG(d){d.pu=d.pu||{};d.pe=d.pe||0;d.nr=d.nr||0;d.sh=d.sh||0;d.rs=d.rs|
   d.st=d.st||{};["tp","ts","ev","ge","pl","bu","fr","mx"].forEach(function(k){d.st[k]=d.st[k]||0});d.st.mx=Math.max(d.st.mx,d.s||0);
   d.ac=d.ac||{};d.dq=d.dq||{d:"",p:{},c:{},a:0};
   if([0,1,10,100].indexOf(d.bq)<0)d.bq=1;
-  d.dn=d.dn||{};d.dn.until=d.dn.until||0;d.dn.used=d.dn.used||[];d.dn.sk=d.dn.sk||[];d.dn.sel=d.dn.sel||0;return d}
+  d.dn=d.dn||{};d.dn.until=d.dn.until||0;d.dn.used=d.dn.used||[];d.dn.sk=d.dn.sk||[];d.dn.sel=d.dn.sel||0;d.dn.mor=d.dn.mor||0;if(d.dn.mshow===undefined)d.dn.mshow=1;return d}
 function lv(k){return (G&&G.pu&&G.pu[k])||0}
 function fx(n){return n<1000?n.toFixed(1).replace(".",","):fmt(n)}
 function shCost(x){return Math.ceil(x.b*Math.pow(x.r,lv(x.k)))}
@@ -559,7 +562,8 @@ function moreView(){
 var SKN=["Ouro","Pérola","Neon","Oceano"],DONV=5,DONM="";
 function donOn(){return !!(window.DON&&DON.pix&&DON.pub)}
 function dnm(){return G&&G.dn&&Date.now()<G.dn.until?2:1}
-function skinApply(){var bt=document.getElementById("btn"),k=(G.dn&&G.dn.sel)?"sk"+G.dn.sel:"";if(bt.className!==k)bt.className=k}
+var MORI="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 60C13 47 6 31 11 21c3-7 13-9 21-4 8-5 18-3 21 4 5 10-2 26-21 39z' fill='%23ff3d71' stroke='%23b3124a' stroke-width='2.5' stroke-linejoin='round'/%3E%3Cpath d='M32 17c-2-6-8-9-13-8 3 3 6 5 13 8zM32 17c2-6 8-9 13-8-3 3-6 5-13 8zM32 17c-3-3-3-8 0-11 3 3 3 8 0 11z' fill='%233fa34d' stroke='%232a7a35' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cellipse cx='21' cy='28' rx='4' ry='7' fill='%23fff' opacity='.5' transform='rotate(-25 21 28)'/%3E%3Cg fill='%23ffe082'%3E%3Cellipse cx='23' cy='35' rx='1.8' ry='2.6'/%3E%3Cellipse cx='33' cy='31' rx='1.8' ry='2.6'/%3E%3Cellipse cx='43' cy='34' rx='1.8' ry='2.6'/%3E%3Cellipse cx='28' cy='43' rx='1.8' ry='2.6'/%3E%3Cellipse cx='38' cy='43' rx='1.8' ry='2.6'/%3E%3Cellipse cx='33' cy='52' rx='1.8' ry='2.6'/%3E%3C/g%3E%3C/svg%3E";
+function skinApply(){var bt=document.getElementById("btn"),k=(G.dn&&G.dn.sel)?"sk"+G.dn.sel:"";if(G.dn&&G.dn.mor&&G.dn.mshow)k+=(k?" ":"")+"mor";if(bt.className!==k)bt.className=k}
 function crc16(s){var c=0xFFFF;for(var i=0;i<s.length;i++){c^=s.charCodeAt(i)<<8;for(var j=0;j<8;j++)c=(c&0x8000)?((c<<1)^0x1021):(c<<1);c&=0xFFFF}return ("000"+c.toString(16).toUpperCase()).slice(-4)}
 function tlv(id,v){var l=String(v.length);return id+(l.length<2?"0"+l:l)+v}
 function pixClean(s,n){return String(s).normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Za-z0-9 ]/g,"").toUpperCase().slice(0,n)}
@@ -574,7 +578,7 @@ function redeemCode(code){
   return new Promise(function(ok){
     try{
       var p=String(code).replace(/\s+/g,"").split(".");
-      if(p.length!=3||p[0]!="CAM1")return ok("Código inválido.");
+      if(p.length!=3||(p[0]!="CAM1"&&p[0]!="MOR1"))return ok("Código inválido.");
       var pr=p[1].split("-"),id=pr[0],dia=+pr[1];
       if(!id||!(dia>0))return ok("Código inválido.");
       var sub=window.crypto&&window.crypto.subtle;if(!sub)return ok("Este aparelho não consegue validar o código (precisa de conexão segura).");
@@ -582,6 +586,10 @@ function redeemCode(code){
         return sub.verify({name:"ECDSA",hash:"SHA-256"},k,b64u(p[2]),new TextEncoder().encode(p[0]+"."+p[1]))
       }).then(function(v){
         if(!v)return ok("Código inválido.");
+        if(p[0]=="MOR1"){
+          if(G.dn.used.indexOf(id)>=0||G.dn.mor)return ok("Este código já foi usado.");
+          G.dn.used.push(id);G.dn.mor=1;G.dn.mshow=1;save();sfx("ach");skinApply();render();return ok("mor");
+        }
         if(Date.now()/864e5-dia>60)return ok("Este código expirou (vale por 60 dias).");
         if(G.dn.used.indexOf(id)>=0)return ok("Este código já foi usado.");
         G.dn.used.push(id);G.dn.until=Math.max(Date.now(),G.dn.until)+7*864e5;
@@ -608,7 +616,9 @@ function donRender(){
   var tem=G.dn.sk.length;
   h+='<div class="row"><small>Suas skins ('+tem+'/4)'+(dnm()>1?" · 💛 renda ×2 ativa":"")+'</small><div class="sn"><button data-sk="0"'+(G.dn.sel==0?' class="on"':'')+'>Padrão</button>';
   SKN.forEach(function(n,i){var has=G.dn.sk.indexOf(i+1)>=0;h+='<button data-sk="'+(i+1)+'"'+(G.dn.sel==i+1?' class="on"':'')+(has?"":" disabled")+'>'+(has?n:"🔒 ?")+'</button>'});
-  h+='</div></div><button class="wide" id="donx">Fechar</button>';
+  h+='</div></div>';
+  if(G.dn.mor)h+='<div class="row"><small>Skin exclusiva</small><div class="it"><div style="width:38px;height:38px;flex:none;background:url('+MORI+') center/contain no-repeat"></div><div class="i"><b>🍬 Moranguete</b><small>Um docinho ao lado do ícone das fases.</small></div><button id="morb">'+(G.dn.mshow?"Ocultar":"Mostrar")+'</button></div></div>';
+  h+='<button class="wide" id="donx">Fechar</button>';
   document.getElementById("donbox").innerHTML=h;
 }
 function donOpen(){document.getElementById("cfg").className="";DONM="";donRender();document.getElementById("don").className="on"}
@@ -616,13 +626,14 @@ document.getElementById("donbox").addEventListener("click",function(e){
   var t=e.target.closest("button");if(!t)return;
   if(t.dataset.v!==undefined){DONV=+t.dataset.v;donRender();return}
   if(t.dataset.sk!==undefined){if(t.disabled)return;G.dn.sel=+t.dataset.sk;save();skinApply();donRender();return}
+  if(t.id=="morb"){G.dn.mshow=G.dn.mshow?0:1;save();skinApply();donRender();return}
   if(t.id=="donc"){copyTxt(pixPayload(DONV));return}
   if(t.id=="donk"){copyTxt(DON.pix);return}
   if(t.id=="donx"){document.getElementById("don").className="";return}
   if(t.id=="donr"){
     var c=document.getElementById("donin").value;
     redeemCode(c).then(function(m){
-      DONM=m.slice(0,2)=="ok"?(m.length>2?"✅ Código aceito! Renda ×2 por 7 dias e a skin "+SKN[+m.slice(3)-1]+" liberada. Obrigado pelo apoio! 💛":"✅ Código aceito! Renda ×2 por mais 7 dias. Você já tem todas as skins. Obrigado! 💛"):"⚠️ "+m;
+      DONM=m=="mor"?"🍬 Skin exclusiva Moranguete liberada! Um docinho agora aparece ao lado do ícone das fases.":m.slice(0,2)=="ok"?(m.length>2?"✅ Código aceito! Renda ×2 por 7 dias e a skin "+SKN[+m.slice(3)-1]+" liberada. Obrigado pelo apoio! 💛":"✅ Código aceito! Renda ×2 por mais 7 dias. Você já tem todas as skins. Obrigado! 💛"):"⚠️ "+m;
       donRender();
     });
   }
