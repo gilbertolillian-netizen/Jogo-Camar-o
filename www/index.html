@@ -70,6 +70,7 @@ em{font-style:italic;color:var(--tx);opacity:.85}
 @keyframes flt{from{translate:0 0}to{translate:0 -5px}}
 @keyframes glo4{from{box-shadow:0 0 12px #4dd0e166}to{box-shadow:0 0 30px #4dd0e1cc}}
 @media (prefers-reduced-motion:reduce){#btn.sk1,#btn.sk2,#btn.sk3,#btn.sk4{animation:none}}
+input[type=range]{accent-color:var(--ac)}
 #don textarea,#don input{width:100%;padding:8px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font-size:12px;margin-top:6px;resize:none}
 </style>
 </head>
@@ -93,6 +94,7 @@ em{font-style:italic;color:var(--tx);opacity:.85}
   <div class="row"><small>Tema</small><div class="seg"><button data-th="auto">Automático</button><button data-th="light">Claro</button><button data-th="dark">Escuro</button></div></div>
   <div class="row" id="donrow" style="display:none"><button class="wide" id="donb" style="margin-top:0">💛 Apoiar o projeto</button></div>
   <div class="row"><small>Som e vibração</small><div class="seg"><button id="sndb"></button><button id="vibb"></button></div></div>
+  <div class="row"><small>Música de fundo</small><div class="seg"><button id="musb"></button></div><input type="range" id="musv" min="0" max="100" step="5" style="width:100%;margin-top:8px"></div>
   <div class="row" id="acc" style="display:none"><small>Conta Google (salva o progresso na nuvem)</small><div id="accb"></div><div id="accm"></div></div>
   <div class="row"><button id="reset" class="wide">Reiniciar jogo</button><button id="cx" class="wide">Fechar</button></div>
 </div></div>
@@ -391,6 +393,7 @@ var CH=["Chinelo na mão, isopor na outra. Você grita \"olha o camarão!\" e a 
 var UD=[["Mais camarão por viagem, menos voltas à praia.", "Chega ao fundo da praia sem carregar peso.", "O primo Beto grita \"olha o camarão!\" por você.", "Camarão gelado o dia todo e pedalada de brinde."], ["O cheirinho de fritura atrai a praia inteira.", "A receita da vovó vira o prato mais pedido.", "Alguém para servir enquanto você frita.", "Música e mesas na areia: virou point."], ["Mais mãos na cozinha, mais pratos saindo.", "Ar-condicionado: o cliente fica e pede sobremesa.", "Um chef que transforma camarão em arte.", "A guia gastronômica visita e todo mundo comenta."], ["Camarão da casa, sem depender da pesca.", "Água oxigenada, camarões felizes e gordinhos.", "Ele cuida da saúde de cada larva.", "Camarão bem alimentado cresce rápido."], ["Outra praia, outra fila de clientes.", "Camarão fresco chegando em toda filial.", "Seu camarão ganha fama além-mar.", "Seu nome na fachada de cada capital."], ["Descasca mil camarões por minuto.", "Camarão fresco por meses, sem perder o sabor.", "Pacotes prontos para qualquer geladeira.", "Do viveiro ao supermercado em poucas horas."], ["Camarão que atravessa o oceano sem esquentar.", "Cargas inteiras rumo a outros continentes.", "Gente que fala outras línguas fechando negócio.", "Sem filas: seu cais, suas regras."], ["Camarões maiores e mais saborosos por design.", "Criação em alto-mar, a perder de vista.", "Em cada cidade, um cheirinho de alho conhecido.", "Entender o oceano para cuidar melhor dele."], ["Os detalhes minúsculos que fazem a diferença.", "Lê o código de cada camarão super.", "Uma mente brilhante e muito café.", "Crescimento acelerado em condições perfeitas."], ["Lista de espera de meses para jantar.", "O vinho certo para cada camarão.", "Um prêmio na parede, um sorriso na cozinha.", "A glória máxima da gastronomia."], ["Camarão crescendo ao sabor das ondas.", "Cultivo protegido no fundo do mar.", "Uma ilha inteira dedicada a camarões.", "Barcos levando e trazendo sem parar."], ["Seu camarão ao alcance de todo carrinho.", "Sem fila, só camarão saindo.", "Todo bairro agora tem o seu camarão.", "Corredores e corredores de camarão."], ["Camarão à vontade, de manhã à noite.", "Hóspedes que acordam com cheiro de mar.", "Quem leva a tripulação ao horizonte.", "Um hotel flutuante com o seu nome."], ["Cada ingresso é uma família sorrindo.", "Gritos de alegria e fome de camarão.", "Um camarão de pelúcia e filas de fotos.", "Dias de férias inesquecíveis no seu reino."], ["Todo mundo aprende a fazer seu camarão.", "Seu rosto na TV e seu camarão na mesa.", "A série mais maratonada do ano.", "Cinema, pipoca e... camarão empanado."], ["Todo o dinheiro bem guardado.", "Camarão rende até juros.", "Seu dinheiro trabalhando enquanto você dorme.", "O preço do camarão sai daqui."], ["Uma casinha para camarões e gente.", "Passeios vendo os camarões nadar ao redor.", "Ruas, lojas e escolas debaixo d'água.", "Uma cidade que nunca para, nem de noite."], ["A primeira casinha do camarão fora da Terra.", "Água, ar e camarão crescendo sem gravidade.", "Mais camarão chegando à Lua, mais rápido.", "Uma cratera inteira de produção."], ["Abrigo seguro contra as tempestades de areia.", "Leva carga por dunas vermelhas.", "Gelo derretido vira água para os viveiros.", "Marte agora tem restaurante, e é seu."], ["Energia sem fim para seus cultivos.", "Mais um quarto na estação, só de camarões.", "Subir ao espaço sem foguete.", "Um anel gigante girando em torno da Terra."], ["Descobre planetas com água para criar camarão.", "Carga de camarão entre as estrelas.", "Proteção para as rotas do camarão.", "Uma cidade inteira voando entre galáxias."], ["Um oceano criado só para seus camarões.", "Prédios, ruas e camarões a perder de vista.", "Fazendas orbitando como um colar.", "Um mundo inteiro dedicado ao camarão."], ["Um sol e todos os planetas com camarão.", "Centenas de estrelas, uma só receita.", "Um braço inteiro da galáxia com alho.", "Quem diria: a Via Láctea tem o seu tempero."], ["Um passo e você já está em outra realidade.", "Em outro universo, o camarão também reina.", "Todos os universos ligados por um só prato.", "O camarão atravessa tudo que existe."], ["Oferendas de alho e limão ao cosmos.", "Um trono de ouro com vista para a eternidade.", "A coroa que o próprio tempo respeita.", "Você é o camarão. O camarão é tudo."]];
 var sub=0,lastAc=0,RK={l:null,m:""},QN=null,TQ=[],TB=0,AU=null,lastSnd=0;
 var SND={s:1,v:1};try{SND=JSON.parse(localStorage.getItem("camarao_snd"))||SND}catch(e){}
+if(SND.m===undefined)SND.m=1;if(SND.mv===undefined)SND.mv=50;
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function row(a,b){return '<div class="it"><div class="i"><b>'+a+'</b></div><b>'+b+'</b></div>'}
 function fmtT(s){s=Math.floor(s);var h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?h+"h "+m+"min":m+"min"}
@@ -410,7 +413,8 @@ function sfx(k){
     T.forEach(function(x){var o=AU.createOscillator(),g=AU.createGain();o.type="sine";o.frequency.value=x[0];g.gain.setValueAtTime(.06,t);g.gain.exponentialRampToValueAtTime(.0001,t+x[1]);o.connect(g);g.connect(AU.destination);o.start(t);o.stop(t+x[1]);t+=x[1]*.9});
   }catch(e){}
 }
-function sndRender(){document.getElementById("sndb").textContent=SND.s?"🔊 Som: ligado":"🔇 Som: desligado";document.getElementById("vibb").textContent=SND.v?"📳 Vibração: ligada":"📴 Vibração: desligada"}
+function sndRender(){document.getElementById("sndb").textContent=SND.s?"🔊 Som: ligado":"🔇 Som: desligado";document.getElementById("vibb").textContent=SND.v?"📳 Vibração: ligada":"📴 Vibração: desligada";
+  document.getElementById("musb").textContent=SND.m?"🎵 Música: ligada ("+SND.mv+"%)":"🔇 Música: desligada";document.getElementById("musv").value=SND.mv}
 function sndSave(){try{localStorage.setItem("camarao_snd",JSON.stringify(SND))}catch(e){}sndRender()}
 document.getElementById("sndb").onclick=function(){SND.s=SND.s?0:1;sndSave();sfx("buy")};
 document.getElementById("vibb").onclick=function(){SND.v=SND.v?0:1;sndSave();sfx("ach")};
@@ -611,6 +615,76 @@ document.getElementById("donbox").addEventListener("click",function(e){
 document.getElementById("don").addEventListener("click",function(e){if(e.target.id=="don")e.target.className=""});
 if(donOn()){["donrow","donl"].forEach(function(id){document.getElementById(id).style.display="block"});
   document.getElementById("donb").onclick=donOpen;document.getElementById("donl2").onclick=function(e){e.preventDefault();donOpen()}}
+
+/* ===== Música de fundo (sintetizada, sem arquivos de áudio) ===== */
+var MU={on:0,armed:0,step:0,next:0,tm:null,g:null,nb:null};
+var MSTEP=60/96/2;
+var MC=[{r:48,c:[60,64,67]},{r:45,c:[57,60,64]},{r:41,c:[53,57,60]},{r:43,c:[55,59,62]},{r:48,c:[60,64,67]},{r:45,c:[57,60,64]},{r:38,c:[50,53,57]},{r:43,c:[55,59,62]}];
+var ML=[[76,0,0,74,72,0,67,0],[69,0,72,0,76,0,0,0],[77,0,76,0,72,0,69,0],[74,0,71,0,67,0,0,0],[72,0,76,0,79,0,76,0],[81,0,79,0,76,0,72,0],[74,0,77,0,81,0,77,0],[79,0,76,74,72,0,0,0]];
+function mf(n){return 440*Math.pow(2,(n-69)/12)}
+function mTone(f,t,d,type,vol,att){
+  var o=AU.createOscillator(),g=AU.createGain();o.type=type;o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(vol,t+(att||.01));g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  o.connect(g);g.connect(MU.g);o.start(t);o.stop(t+d+.05);
+}
+function mKick(t){
+  var o=AU.createOscillator(),g=AU.createGain();
+  o.frequency.setValueAtTime(130,t);o.frequency.exponentialRampToValueAtTime(45,t+.12);
+  g.gain.setValueAtTime(.5,t);g.gain.exponentialRampToValueAtTime(.0001,t+.2);
+  o.connect(g);g.connect(MU.g);o.start(t);o.stop(t+.22);
+}
+function mHat(t){
+  var s=AU.createBufferSource(),f=AU.createBiquadFilter(),g=AU.createGain();
+  s.buffer=MU.nb;f.type="highpass";f.frequency.value=7000;
+  g.gain.setValueAtTime(.07,t);g.gain.exponentialRampToValueAtTime(.0001,t+.05);
+  s.connect(f);f.connect(g);g.connect(MU.g);s.start(t);
+}
+function muStep(s,t){
+  var bar=(s>>3)%8,k=s&7,ch=MC[bar];
+  mTone(mf(ch.c[[0,1,2,1,0,1,2,1][k]]+12),t,.45,"triangle",.1,.005);
+  if(k==0)mTone(mf(ch.r),t,.9,"sine",.28,.01);
+  if(k==3)mTone(mf(ch.r),t,.4,"sine",.2,.01);
+  if(k==4)mTone(mf(ch.r+7),t,.5,"sine",.2,.01);
+  if(k==6)mTone(mf(ch.r+12),t,.35,"sine",.14,.01);
+  var m=ML[bar][k];if(m)mTone(mf(m),t,.6,"sine",.16,.01);
+  if(k==0||k==4)mKick(t);
+  if(k&1)mHat(t);
+}
+function muSched(){
+  if(!MU.on||!AU)return;
+  while(MU.next<AU.currentTime+.25){muStep(MU.step%64,MU.next);MU.next+=MSTEP;MU.step++}
+}
+function muVol(){if(!MU.g)return;var v=Math.pow(SND.mv/100,2)*.6;try{MU.g.gain.setTargetAtTime(v,AU.currentTime,.05)}catch(e){MU.g.gain.value=v}}
+function muStart(){
+  if(MU.on||!SND.m)return;
+  try{
+    if(!AU)AU=new (window.AudioContext||window.webkitAudioContext)();
+    if(AU.state=="suspended")AU.resume();
+    if(!MU.g){
+      MU.g=AU.createGain();MU.g.connect(AU.destination);
+      var b=AU.createBuffer(1,Math.floor(AU.sampleRate*.06),AU.sampleRate),d=b.getChannelData(0);
+      for(var i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+      MU.nb=b;
+    }
+    muVol();MU.on=1;MU.step=0;MU.next=AU.currentTime+.1;
+    MU.tm=setInterval(muSched,100);
+  }catch(e){MU.on=0}
+}
+function muStop(){MU.on=0;if(MU.tm){clearInterval(MU.tm);MU.tm=null}}
+document.getElementById("musb").onclick=function(){
+  SND.m=SND.m?0:1;
+  if(SND.m){MU.armed=1;muStart();sfx("buy")}else muStop();
+  sndSave();
+};
+document.getElementById("musv").addEventListener("input",function(e){
+  SND.mv=+e.target.value;MU.armed=1;
+  if(SND.mv==0)SND.m=0;else if(!SND.m){SND.m=1}
+  if(SND.m)muStart();else muStop();
+  muVol();sndRender();
+});
+document.getElementById("musv").addEventListener("change",function(){sndSave()});
+document.addEventListener("pointerdown",function(){if(!MU.armed){MU.armed=1;muStart()}},true);
+document.addEventListener("visibilitychange",function(){if(document.hidden)muStop();else if(SND.m&&MU.armed)muStart()});
 render();
 </script>
 </body>
