@@ -148,7 +148,7 @@ function def(){return fixG({m:0,s:0,o:[0,0,0,0],cl:0,pm:1,t:Date.now(),bt:0,fc:0
 function load(){try{var r=localStorage.getItem(SK);if(r){var d=JSON.parse(r);if(d&&d.o)return fixG(d)}}catch(e){}return def()}
 function save(){try{G.t=Date.now();localStorage.setItem(SK,JSON.stringify(G))}catch(e){}}
 function fmt(n){var u=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc"],i=0;while(n>=1000&&i<11){n/=1000;i++}if(n>=1000)return (n*Math.pow(1000,i)).toExponential(2).replace("+","");return (n<10&&i?n.toFixed(2):n<100&&i?n.toFixed(1):Math.floor(n))+u[i]}
-function mult(){return G.pm*(Date.now()<G.bt?2:1)*Math.pow(1.5,lv("re"))*efm("inc")*acMult()*dnm()}
+function mult(){return G.pm*(Date.now()<G.bt?2:1)*Math.pow(1.5,lv("re"))*efm("inc")*acMult()*dnm()*devm()}
 function dps(){var s=S[G.s],t=0;for(var i=0;i<4;i++)t+=G.o[i]*s.g[i][2];return t*mult()}
 function click(){return S[G.s].cb*(1+G.cl)*mult()*Math.pow(2,lv("to"))*efm("tap")}
 function gc(i){return Math.ceil(S[G.s].g[i][1]*Math.pow(1.15,G.o[i])*Math.pow(.95,lv("de")))}
@@ -231,7 +231,7 @@ document.getElementById("btn").addEventListener("pointerdown",function(e){
   render();
 });
 ["t0","t1","t2","t3"].forEach(function(id,i){document.getElementById(id).onclick=function(){tab=i;["t0","t1","t2","t3"].forEach(function(o,j){document.getElementById(o).className=j==i?"on":""});render()}});
-document.getElementById("reset").onclick=function(e){e.preventDefault();if(confirm("Apagar todo o progresso?")){G=def();save();render()}};
+document.getElementById("reset").onclick=function(e){e.preventDefault();if(confirm("Apagar todo o progresso?")){var odn=G.dn;G=def();G.dn=odn;save();render();skinApply()}};
 try{if(window.Capacitor&&Capacitor.getPlatform&&Capacitor.getPlatform()!="web")document.getElementById("dl").style.display="none"}catch(e){}
 G=load();
 var away=Math.min((Date.now()-G.t)/1000,8*3600);
@@ -281,7 +281,7 @@ function syncIn(){
   FB.d.collection("saves").doc(US.uid).get().then(function(s){
     if(s.exists){var c=JSON.parse(s.data().d);
       if(c.t>G.t&&confirm("Há um progresso mais recente salvo na nuvem. OK = usar o da nuvem. Cancelar = manter o deste aparelho (e substituir a nuvem).")){
-        G=fixG(c);save();render();cloudMsg("Progresso da nuvem carregado ✔")}
+        G=fixG(c);devRestore();save();render();cloudMsg("Progresso da nuvem carregado ✔")}
       else syncOut()
     }else syncOut()
   }).catch(function(){cloudMsg("Erro ao ler a nuvem")})
@@ -310,7 +310,7 @@ function fixG(d){d.pu=d.pu||{};d.pe=d.pe||0;d.nr=d.nr||0;d.sh=d.sh||0;d.rs=d.rs|
   d.st=d.st||{};["tp","ts","ev","ge","pl","bu","fr","mx"].forEach(function(k){d.st[k]=d.st[k]||0});d.st.mx=Math.max(d.st.mx,d.s||0);
   d.ac=d.ac||{};d.dq=d.dq||{d:"",p:{},c:{},a:0};
   if([0,1,10,100].indexOf(d.bq)<0)d.bq=1;
-  d.dn=d.dn||{};d.dn.until=d.dn.until||0;d.dn.used=d.dn.used||[];d.dn.sk=d.dn.sk||[];d.dn.sel=d.dn.sel||0;d.dn.mor=d.dn.mor||0;if(d.dn.mshow===undefined)d.dn.mshow=1;d.dn.sal=d.dn.sal||0;if(d.dn.sshow===undefined)d.dn.sshow=1;return d}
+  d.dn=d.dn||{};d.dn.until=d.dn.until||0;d.dn.used=d.dn.used||[];d.dn.sk=d.dn.sk||[];d.dn.sel=d.dn.sel||0;d.dn.mor=d.dn.mor||0;if(d.dn.mshow===undefined)d.dn.mshow=1;d.dn.sal=d.dn.sal||0;if(d.dn.sshow===undefined)d.dn.sshow=1;d.dn.devcode=typeof d.dn.devcode=="string"?d.dn.devcode:"";if(d.dn.devon===undefined)d.dn.devon=1;return d}
 function lv(k){return (G&&G.pu&&G.pu[k])||0}
 function fx(n){return n<1000?n.toFixed(1).replace(".",","):fmt(n)}
 function shCost(x){return Math.ceil(x.b*Math.pow(x.r,lv(x.k)))}
@@ -351,6 +351,7 @@ function efm(k){var f=EF&&EF[k];return f&&Date.now()<f.u?f.m:1}
 function setEf(k,m,sec){EF[k]={m:m,u:Date.now()+sec*1000}}
 function boText(b){
   var o=[];if(b)o.push("🔥 Banquete ×2 ("+Math.ceil((G.bt-Date.now())/1000)+"s)");
+  if(devm()>1)o.push("🛠️ Modo dev ×10");
   if(dnm()>1){var r=G.dn.until-Date.now(),dd=Math.floor(r/864e5),hh=Math.floor(r%864e5/36e5);o.push("💛 Apoiador ×2 ("+(dd?dd+"d ":"")+hh+"h)")}
   [["inc","renda"],["tap","toque"]].forEach(function(x){var f=EF[x[0]];
     if(f&&Date.now()<f.u)o.push((f.m>1?"✨ ":"⚠️ ")+x[1]+" ×"+String(f.m).replace(".",",")+" ("+Math.ceil((f.u-Date.now())/1000)+"s)")});
@@ -510,7 +511,7 @@ function claimQ(i){
 function nickGet(){return G.nick||("Camarão"+(US?US.uid.slice(-4):"0000"))}
 function rkScore(){return (G.st.mx+1)*1e7+Math.min(G.st.pl,9999999)}
 function rkPush(){
-  if(!US||!FB)return;
+  if(!US||!FB||DEVOK)return;
   try{FB.d.collection("ranking").doc(US.uid).set({n:nickGet(),sc:rkScore(),mx:G.st.mx,pl:G.st.pl,t:Date.now()}).catch(function(){})}catch(e){}
 }
 function rkLoad(){
@@ -582,7 +583,7 @@ function redeemCode(code){
   return new Promise(function(ok){
     try{
       var p=String(code).replace(/\s+/g,"").split(".");
-      if(p.length!=3||(p[0]!="CAM1"&&p[0]!="MOR1"&&p[0]!="SAL1"))return ok("Código inválido.");
+      if(p.length!=3||(p[0]!="CAM1"&&p[0]!="MOR1"&&p[0]!="SAL1"&&p[0]!="DEV1"))return ok("Código inválido.");
       var pr=p[1].split("-"),id=pr[0],dia=+pr[1];
       if(!id||!(dia>0))return ok("Código inválido.");
       var sub=window.crypto&&window.crypto.subtle;if(!sub)return ok("Este aparelho não consegue validar o código (precisa de conexão segura).");
@@ -590,6 +591,13 @@ function redeemCode(code){
         return sub.verify({name:"ECDSA",hash:"SHA-256"},k,b64u(p[2]),new TextEncoder().encode(p[0]+"."+p[1]))
       }).then(function(v){
         if(!v)return ok("Código inválido.");
+        if(p[0]=="DEV1"){
+          if(Date.now()/864e5-dia>2)return ok("Este código expirou (vale por 2 dias).");
+          if(DEVOK&&G.dn.devcode)return ok("O modo desenvolvedor já está ativo.");
+          var dc=String(code).replace(/\s+/g,"");G.dn.devcode=dc;G.dn.devon=1;DEVOK=true;
+          try{localStorage.setItem("camarao_dev",dc)}catch(e){}
+          save();sfx("ach");render();return ok("dev");
+        }
         if(p[0]=="MOR1"||p[0]=="SAL1"){
           var kk=p[0]=="MOR1"?"mor":"sal";
           if(G.dn.used.indexOf(id)>=0||G.dn[kk])return ok("Este código já foi usado.");
@@ -622,6 +630,7 @@ function donRender(){
   h+='<div class="row"><small>Suas skins ('+tem+'/4)'+(dnm()>1?" · 💛 renda ×2 ativa":"")+'</small><div class="sn"><button data-sk="0"'+(G.dn.sel==0?' class="on"':'')+'>Padrão</button>';
   SKN.forEach(function(n,i){var has=G.dn.sk.indexOf(i+1)>=0;h+='<button data-sk="'+(i+1)+'"'+(G.dn.sel==i+1?' class="on"':'')+(has?"":" disabled")+'>'+(has?n:"🔒 ?")+'</button>'});
   h+='</div></div>';
+  if(DEVOK)h+='<div class="row"><small>Modo desenvolvedor</small><div class="it"><div style="font-size:26px">🛠️</div><div class="i"><b>Renda e toque ×10</b><small>'+(G.dn.devon?"Ligado":"Desligado")+' · a ativação é permanente</small></div><button id="devb">'+(G.dn.devon?"Desligar":"Ligar")+'</button></div></div>';
   if(G.dn.mor||G.dn.sal){h+='<div class="row"><small>Skins exclusivas</small>';
     if(G.dn.mor)h+='<div class="it"><div style="width:76px;height:24px;flex:none;background:var(--mor) center/contain no-repeat"></div><div class="i"><b>🍬 Moranguete</b><small>Um docinho ao lado do ícone das fases.</small></div><button id="morb">'+(G.dn.mshow?"Ocultar":"Mostrar")+'</button></div>';
     if(G.dn.sal)h+='<div class="it"><div style="width:76px;height:31px;flex:none;background:var(--sal) center/contain no-repeat"></div><div class="i"><b>🐕 Salsicha</b><small>Um cachorrinho salsicha ao lado do ícone das fases.</small></div><button id="salb">'+(G.dn.sshow?"Ocultar":"Mostrar")+'</button></div>';
@@ -634,6 +643,7 @@ document.getElementById("donbox").addEventListener("click",function(e){
   var t=e.target.closest("button");if(!t)return;
   if(t.dataset.v!==undefined){DONV=+t.dataset.v;donRender();return}
   if(t.dataset.sk!==undefined){if(t.disabled)return;G.dn.sel=+t.dataset.sk;save();skinApply();donRender();return}
+  if(t.id=="devb"){G.dn.devon=G.dn.devon?0:1;save();donRender();render();return}
   if(t.id=="morb"){G.dn.mshow=G.dn.mshow?0:1;save();skinApply();donRender();return}
   if(t.id=="salb"){G.dn.sshow=G.dn.sshow?0:1;save();skinApply();donRender();return}
   if(t.id=="donc"){copyTxt(pixPayload(DONV));return}
@@ -642,7 +652,7 @@ document.getElementById("donbox").addEventListener("click",function(e){
   if(t.id=="donr"){
     var c=document.getElementById("donin").value;
     redeemCode(c).then(function(m){
-      DONM=m=="sal"?"🐕 Skin exclusiva Salsicha liberada! Um cachorrinho salsicha agora aparece ao lado do ícone das fases.":m=="mor"?"🍬 Skin exclusiva Moranguete liberada! Um docinho agora aparece ao lado do ícone das fases.":m.slice(0,2)=="ok"?(m.length>2?"✅ Código aceito! Renda ×2 por 7 dias e a skin "+SKN[+m.slice(3)-1]+" liberada. Obrigado pelo apoio! 💛":"✅ Código aceito! Renda ×2 por mais 7 dias. Você já tem todas as skins. Obrigado! 💛"):"⚠️ "+m;
+      DONM=m=="dev"?"🛠️ Modo desenvolvedor ativado para sempre: renda e toque ×10.":m=="sal"?"🐕 Skin exclusiva Salsicha liberada! Um cachorrinho salsicha agora aparece ao lado do ícone das fases.":m=="mor"?"🍬 Skin exclusiva Moranguete liberada! Um docinho agora aparece ao lado do ícone das fases.":m.slice(0,2)=="ok"?(m.length>2?"✅ Código aceito! Renda ×2 por 7 dias e a skin "+SKN[+m.slice(3)-1]+" liberada. Obrigado pelo apoio! 💛":"✅ Código aceito! Renda ×2 por mais 7 dias. Você já tem todas as skins. Obrigado! 💛"):"⚠️ "+m;
       donRender();
     });
   }
@@ -720,6 +730,33 @@ document.getElementById("musv").addEventListener("input",function(e){
 document.getElementById("musv").addEventListener("change",function(){sndSave()});
 document.addEventListener("pointerdown",function(){if(!MU.armed){MU.armed=1;muStart()}},true);
 document.addEventListener("visibilitychange",function(){if(document.hidden)muStop();else if(SND.m&&MU.armed)muStart()});
+
+/* ===== Modo desenvolvedor (código DEV1, ×10 em renda e toque, permanente) ===== */
+var DEVOK=false;
+function devm(){return DEVOK&&G&&G.dn&&G.dn.devon?10:1}
+function codeSig(code){
+  return new Promise(function(res){
+    try{
+      var p=String(code||"").replace(/\s+/g,"").split(".");
+      if(p.length!=3)return res(null);
+      var pr=p[1].split("-"),id=pr[0],sub=window.crypto&&window.crypto.subtle;
+      if(!sub||!window.DON||!DON.pub||!id)return res(null);
+      sub.importKey("jwk",DON.pub,{name:"ECDSA",namedCurve:"P-256"},false,["verify"]).then(function(k){
+        return sub.verify({name:"ECDSA",hash:"SHA-256"},k,b64u(p[2]),new TextEncoder().encode(p[0]+"."+p[1]))
+      }).then(function(v){res(v?{pre:p[0],id:id}:null)}).catch(function(){res(null)});
+    }catch(e){res(null)}
+  });
+}
+function devRestore(){
+  var c="";try{c=(G&&G.dn&&G.dn.devcode)||localStorage.getItem("camarao_dev")||""}catch(e){}
+  if(!c){DEVOK=false;return}
+  codeSig(c).then(function(r){
+    DEVOK=!!(r&&r.pre=="DEV1");
+    if(DEVOK&&G.dn&&!G.dn.devcode){G.dn.devcode=String(c).replace(/\s+/g,"")}
+    render();
+  });
+}
+devRestore();
 render();
 </script>
 </body>

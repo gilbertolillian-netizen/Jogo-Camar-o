@@ -2,9 +2,10 @@
 // Gera códigos EXCLUSIVOS de skins especiais. Só quem tem a sua chave privada consegue gerar.
 // Uso: node tools/gerar-codigo-exclusivo.js moranguete      (1 código)
 //      node tools/gerar-codigo-exclusivo.js salsicha 3      (3 códigos)
+//      node tools/gerar-codigo-exclusivo.js dev             (modo desenvolvedor ×10; vale 2 dias para resgatar)
 const fs = require("fs"), path = require("path"), os = require("os"), crypto = require("crypto");
 const { subtle } = crypto.webcrypto;
-const TIPOS = { moranguete: "MOR1", salsicha: "SAL1" };
+const TIPOS = { moranguete: "MOR1", salsicha: "SAL1", dev: "DEV1" };
 const KEYFILE = process.env.CAM_KEYFILE || path.join(os.homedir(), ".camarao-private-key.json");
 (async () => {
   const tipo = (process.argv[2] || "").toLowerCase();
@@ -14,7 +15,7 @@ const KEYFILE = process.env.CAM_KEYFILE || path.join(os.homedir(), ".camarao-pri
   const key = await subtle.importKey("jwk", priv, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]);
   const alf = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   const n = Math.max(1, +process.argv[3] || 1);
-  const dia = Math.floor(Date.now() / 864e5);
+  const dia = process.env.CAM_DIA ? +process.env.CAM_DIA : Math.floor(Date.now() / 864e5);
   for (let i = 0; i < n; i++) {
     const b = crypto.randomBytes(6);
     let id = ""; for (const x of b) id += alf[x % alf.length];
