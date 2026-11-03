@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Painel · Camarão Tycoon</title>
+<style>
+:root{--bg:#fff7ee;--card:#fff;--tx:#3a2418;--mu:#8a6a58;--ac:#ff6b4a;--bd:#f0d9c8;--ok:#2e9e6a;--er:#d9382c;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#1d1410;--card:#2a1d17;--tx:#fbe9dc;--mu:#b89885;--bd:#433025;--ok:#4cc58a;--er:#ff7a6e;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0 auto;padding:12px;max-width:560px;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+h1{font-size:20px;margin:6px 0 10px}h2{font-size:16px;margin:0 0 6px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin:10px 0}
+label{display:block;font-size:13px;color:var(--mu);margin-top:8px}
+input,textarea{width:100%;padding:9px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font-size:15px;margin-top:3px}
+input[type=checkbox]{width:auto;margin:0}
+button{padding:10px 12px;border-radius:10px;border:0;background:var(--ac);color:#fff;font-weight:700;margin:8px 6px 0 0;font-size:14px}
+button.sec{background:transparent;color:var(--tx);border:1px solid var(--bd)}
+.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}.bi label.chk{color:var(--tx);font-size:15px;margin:0}.bi input[type=number]{max-width:90px}
+#msg{font-weight:600;margin-top:10px;min-height:20px;white-space:pre-wrap}.ok{color:var(--ok)}.err{color:var(--er)}
+small{color:var(--mu)}
+</style>
+</head>
+<body>
+<h1>🦐 Painel do Camarão Tycoon</h1>
+<div class="card">
+  <h2>Conexão</h2>
+  <label>Endereço do servidor (Worker)<input id="url" placeholder="https://camarao-api.seunome.workers.dev" autocomplete="off" autocapitalize="off"></label>
+  <label>Token de administrador<input id="tok" type="password" autocomplete="off"></label>
+  <button id="load" type="button">Carregar do servidor</button>
+</div>
+<div class="card">
+  <h2>🎉 Campanhas</h2>
+  <small>Bônus de renda e/ou toque por um período, para todos os jogadores. O texto aparece no topo do jogo.</small>
+  <div id="camps"></div>
+  <button id="p1" class="sec" type="button">+ Renda ×2 por 48h (agora)</button>
+  <button id="p2" class="sec" type="button">+ Fim de semana ×2</button>
+  <button id="p3" class="sec" type="button">+ Toque ×3 por 1h (agora)</button>
+  <button id="p0" class="sec" type="button">+ Em branco</button>
+</div>
+<div class="card">
+  <h2>🎲 Eventos aleatórios</h2>
+  <div class="row"><label>Intervalo mínimo (s)<input id="fmin" type="number" min="30" max="3600"></label><label>Intervalo máximo (s)<input id="fmax" type="number" min="30" max="7200"></label></div>
+  <small>Desmarque para desligar um evento. O número é o peso: quanto maior, mais frequente (0 desliga).</small>
+  <div id="bi"></div>
+</div>
+<div class="card">
+  <h2>📣 Aviso ao abrir o jogo</h2>
+  <label>Texto (deixe vazio para não mostrar)<input id="ntext" maxlength="120"></label>
+  <label>Mostrar até (opcional)<input id="nuntil" type="datetime-local"></label>
+</div>
+<div class="card">
+  <h2>🧪 Eventos personalizados (avançado)</h2>
+  <small>Lista em JSON. Efeitos: inc e tap (m = multiplicador, s = segundos), gain e loss (min = minutos de renda), pearl (n, até 3).</small>
+  <textarea id="evjson" rows="10" spellcheck="false" autocapitalize="off"></textarea>
+  <button id="ex" class="sec" type="button">Inserir exemplo</button>
+</div>
+<div class="card">
+  <button id="save" type="button">💾 Salvar no servidor</button>
+  <div id="msg"></div>
+</div>
+<script>
+var $=function(i){return document.getElementById(i)};
+var BI=[["mare","🌊 Maré cheia",10],["cardume","🐟 Cardume gigante",10],["turista","🧳 Turista famoso",10],["freezer","🧊 Freezer quebrou",8],["fiscal","🕵️ Fiscal sanitário",8],["perola","🐚 Pérola rara",1],["tempestade","⛈️ Tempestade na praia",12],["greve","🪧 Greve no porto",12],["meteoros","☄️ Chuva de meteoros",12]];
+var EXAMPLE=[{id:"festa",on:true,w:10,min:0,max:24,ic:"🎉",t:"Festa na praia!",d:"Chegou muita gente.",ch:[{l:"Aproveitar",fx:[{t:"inc",m:2,s:60}],msg:"Renda ×2 por 60s!"},{l:"Contratar a banda",cost:1,rnd:[{p:.7,fx:[{t:"inc",m:3,s:90}],msg:"Show lotado: renda ×3!"},{p:.3,fx:[],msg:"A banda faltou."}]}]}];
+var st={campaigns:[],noticeId:"",noticeText:""};
+function pad(n){return n<10?"0"+n:""+n}
+function toLocal(ms){if(!ms)return"";var d=new Date(ms);return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+"T"+pad(d.getHours())+":"+pad(d.getMinutes())}
+function fromLocal(s){if(!s)return 0;var t=new Date(s).getTime();return isFinite(t)?t:0}
+function weekend(now){var d=new Date(now);d.setHours(0,0,0,0);var w=d.getDay(),add=w==6?0:(w==0?-1:6-w),from=d.getTime()+add*864e5;return{from:from,until:from+2*864e5-6e4}}
+function el(tag,props,kids){var e=document.createElement(tag);for(var k in (props||{})){var v=props[k];if(k=="text")e.textContent=v;else if(k.slice(0,2)=="on")e[k]=v;else e.setAttribute(k,v)}(kids||[]).forEach(function(c){e.appendChild(c)});return e}
+function field(label,type,val,fn,extra){var a={type:type,value:val==null?"":val};for(var k in (extra||{}))a[k]=extra[k];var inp=el("input",a);inp.oninput=function(){fn(inp.value)};return el("label",{},[el("span",{text:label}),inp])}
+function renderCamps(){
+  var box=$("camps");box.innerHTML="";
+  st.campaigns.forEach(function(c,i){
+    box.appendChild(el("div",{"class":"card"},[
+      field("Texto que aparece no topo do jogo","text",c.text||"",function(v){c.text=v},{maxlength:"80"}),
+      field("Início","datetime-local",toLocal(c.from),function(v){c.from=fromLocal(v)}),
+      field("Fim","datetime-local",toLocal(c.until),function(v){c.until=fromLocal(v)}),
+      field("Renda ×","number",c.inc,function(v){c.inc=+v},{step:"0.1",min:"0.1",max:"10"}),
+      field("Toque ×","number",c.tap,function(v){c.tap=+v},{step:"0.1",min:"0.1",max:"10"}),
+      el("button",{type:"button","class":"sec",text:"Remover",onclick:function(){st.campaigns.splice(i,1);renderCamps()}})]));
+  });
+}
+function buildBI(){
+  var box=$("bi");box.innerHTML="";
+  BI.forEach(function(b){
+    box.appendChild(el("div",{"class":"row bi"},[
+      el("label",{"class":"chk"},[el("input",{type:"checkbox",id:"b_"+b[0]}),el("span",{text:" "+b[1]})]),
+      el("input",{type:"number",id:"w_"+b[0],min:"0",max:"100",title:"peso"})]));
+  });
+}
+function buildCfg(){
+  var cfg={freq:{min:+$("fmin").value||180,max:+$("fmax").value||360},builtin:{},campaigns:[],events:[],notice:null};
+  BI.forEach(function(b){var on=$("b_"+b[0]).checked,w=+$("w_"+b[0]).value,e={};if(!on)e.on=false;if(isFinite(w)&&w!==b[2])e.w=w;if(Object.keys(e).length)cfg.builtin[b[0]]=e});
+  st.campaigns.forEach(function(c,i){
+    if(!(c.until>c.from))throw new Error("Campanha "+(i+1)+": o fim precisa ser depois do início.");
+    cfg.campaigns.push({id:c.id||("c"+i),text:c.text||"",from:c.from,until:c.until,inc:c.inc||1,tap:c.tap||1});
+  });
+  var raw=($("evjson").value||"").trim();
+  if(raw){
+    try{cfg.events=JSON.parse(raw)}catch(e){throw new Error("O JSON dos eventos personalizados está inválido: "+e.message)}
+    if(!Array.isArray(cfg.events))throw new Error("Os eventos personalizados precisam ser uma lista [ ... ].");
+  }
+  var nt=($("ntext").value||"").trim();
+  if(nt){cfg.notice={id:(nt==st.noticeText&&st.noticeId)?st.noticeId:("n"+Date.now()),text:nt,until:fromLocal($("nuntil").value)}}
+  return cfg;
+}
+function fill(cfg){
+  cfg=cfg||{};var f=cfg.freq||{};
+  $("fmin").value=f.min||180;$("fmax").value=f.max||360;
+  BI.forEach(function(b){var e=(cfg.builtin||{})[b[0]]||{};$("b_"+b[0]).checked=e.on!==false;$("w_"+b[0]).value=e.w!==undefined?e.w:b[2]});
+  st.campaigns=(cfg.campaigns||[]).map(function(c){return{id:c.id,text:c.text,from:c.from,until:c.until,inc:c.inc,tap:c.tap}});renderCamps();
+  var n=cfg.notice;st.noticeId=n?n.id:"";st.noticeText=n?n.text:"";
+  $("ntext").value=n?n.text:"";$("nuntil").value=n&&n.until?toLocal(n.until):"";
+  $("evjson").value=(cfg.events&&cfg.events.length)?JSON.stringify(cfg.events,null,2):"";
+}
+function base(){return $("url").value.trim().replace(/\/+$/,"")}
+function say(t,ok){var m=$("msg");m.textContent=t;m.className=ok?"ok":"err"}
+function apiLoad(){
+  if(!base())return say("Informe o endereço do servidor.");
+  try{localStorage.setItem("camarao_admin_url",base())}catch(e){}
+  say("Carregando...",1);
+  return fetch(base()+"/config",{cache:"no-store"}).then(function(r){return r.json()}).then(function(j){fill(j);say("Configuração carregada do servidor.",1)}).catch(function(e){say("Não consegui carregar: "+e.message)});
+}
+function apiSave(){
+  var cfg;try{cfg=buildCfg()}catch(e){return say(e.message)}
+  var tok=$("tok").value.trim();
+  if(!base())return say("Informe o endereço do servidor.");
+  if(!tok)return say("Informe o token de administrador.");
+  try{localStorage.setItem("camarao_admin_url",base())}catch(e){}
+  say("Salvando...",1);
+  return fetch(base()+"/config",{method:"PUT",headers:{"Authorization":"Bearer "+tok,"Content-Type":"application/json"},body:JSON.stringify(cfg)})
+    .then(function(r){return r.json().then(function(j){return{s:r.status,j:j}})})
+    .then(function(x){if(x.s==200&&x.j.ok){fill(x.j.cfg);say("Salvo! Os jogadores recebem em alguns minutos.",1)}else say("Erro "+x.s+": "+(x.j.erro||"falha ao salvar"))})
+    .catch(function(e){say("Não consegui salvar: "+e.message)});
+}
+function addCamp(c){st.campaigns.push(c);renderCamps()}
+$("p0").onclick=function(){var n=Date.now();addCamp({id:"c"+n,text:"",from:n,until:n+864e5,inc:1,tap:1})};
+$("p1").onclick=function(){var n=Date.now();addCamp({id:"c"+n,text:"Renda dobrada!",from:n,until:n+48*36e5,inc:2,tap:1})};
+$("p3").onclick=function(){var n=Date.now();addCamp({id:"c"+n,text:"Hora do toque ×3!",from:n,until:n+36e5,inc:1,tap:3})};
+$("p2").onclick=function(){var w=weekend(Date.now());addCamp({id:"c"+w.from,text:"Fim de semana de renda ×2!",from:w.from,until:w.until,inc:2,tap:1})};
+$("ex").onclick=function(){$("evjson").value=JSON.stringify(EXAMPLE,null,2)};
+$("load").onclick=apiLoad;
+$("save").onclick=apiSave;
+buildBI();fill({});
+try{$("url").value=localStorage.getItem("camarao_admin_url")||""}catch(e){}
+</script>
+</body>
+</html>

@@ -113,6 +113,7 @@ input[type=range]{accent-color:var(--ac)}
 <div id="don"><div class="box" id="donbox"></div></div>
 <script src="firebase-config.js"></script>
 <script src="donate-config.js"></script>
+<script src="remote-config.js"></script>
 <script>
 var K=60;
 var NM=[
@@ -148,9 +149,9 @@ function def(){return fixG({m:0,s:0,o:[0,0,0,0],cl:0,pm:1,t:Date.now(),bt:0,fc:0
 function load(){try{var r=localStorage.getItem(SK);if(r){var d=JSON.parse(r);if(d&&d.o)return fixG(d)}}catch(e){}return def()}
 function save(){try{G.t=Date.now();localStorage.setItem(SK,JSON.stringify(G))}catch(e){}}
 function fmt(n){var u=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc"],i=0;while(n>=1000&&i<11){n/=1000;i++}if(n>=1000)return (n*Math.pow(1000,i)).toExponential(2).replace("+","");return (n<10&&i?n.toFixed(2):n<100&&i?n.toFixed(1):Math.floor(n))+u[i]}
-function mult(){return G.pm*(Date.now()<G.bt?2:1)*Math.pow(1.5,lv("re"))*efm("inc")*acMult()*dnm()*devm()}
+function mult(){return G.pm*(Date.now()<G.bt?2:1)*Math.pow(1.5,lv("re"))*efm("inc")*acMult()*dnm()*devm()*rcM("inc")}
 function dps(){var s=S[G.s],t=0;for(var i=0;i<4;i++)t+=G.o[i]*s.g[i][2];return t*mult()}
-function click(){return S[G.s].cb*(1+G.cl)*mult()*Math.pow(2,lv("to"))*efm("tap")}
+function click(){return S[G.s].cb*(1+G.cl)*mult()*Math.pow(2,lv("to"))*efm("tap")*rcM("tap")}
 function gc(i){return Math.ceil(S[G.s].g[i][1]*Math.pow(1.15,G.o[i])*Math.pow(.95,lv("de")))}
 function cc(){return Math.ceil(S[G.s].cc*Math.pow(1.6,G.cl))}
 function geo(b,r,o,n){return Math.ceil(b*Math.pow(r,o)*(Math.pow(r,n)-1)/(r-1))}
@@ -355,6 +356,7 @@ function boText(b){
   if(dnm()>1){var r=G.dn.until-Date.now(),dd=Math.floor(r/864e5),hh=Math.floor(r%864e5/36e5);o.push("💛 Apoiador ×2 ("+(dd?dd+"d ":"")+hh+"h)")}
   [["inc","renda"],["tap","toque"]].forEach(function(x){var f=EF[x[0]];
     if(f&&Date.now()<f.u)o.push((f.m>1?"✨ ":"⚠️ ")+x[1]+" ×"+String(f.m).replace(".",",")+" ("+Math.ceil((f.u-Date.now())/1000)+"s)")});
+  rcBo(o);
   return o.join(" · ");
 }
 var EVS=[
@@ -376,10 +378,13 @@ var EVS=[
    {l:function(){return "Ignorar"},f:function(){setEf("inc",.7,60);return "Greve: renda ×0,7 por 60s."}}]},
  {w:12,min:17,ic:"☄️",t:"Chuva de meteoros!",d:"Pedaços de rocha cheios de minerais.",ch:[{l:function(){return "Coletar"},f:function(){setEf("tap",10,20);return "Toque ×10 por 20 segundos!"}}]}
 ];
+["mare","cardume","turista","freezer","fiscal","perola","tempestade","greve","meteoros"].forEach(function(id,i){EVS[i].id=id});
+function evW(e){var b=RC.c.builtin[e.id];return b&&b.w!==undefined?b.w:e.w}
 function evPick(){
-  var pool=EVS.filter(function(e){return (e.min===undefined||G.s>=e.min)&&(e.max===undefined||G.s<=e.max)});
-  var tot=pool.reduce(function(a,e){return a+e.w},0),r=Math.random()*tot;
-  for(var i=0;i<pool.length;i++){r-=pool[i].w;if(r<=0)return pool[i]}
+  var pool=EVS.concat(RC.ev).filter(function(e){var b=RC.c.builtin[e.id];if(b&&b.on===false)return false;return (e.min===undefined||G.s>=e.min)&&(e.max===undefined||G.s<=e.max)&&evW(e)>0});
+  if(!pool.length)return null;
+  var tot=pool.reduce(function(a,e){return a+evW(e)},0),r=Math.random()*tot;
+  for(var i=0;i<pool.length;i++){r-=evW(pool[i]);if(r<=0)return pool[i]}
   return pool[0];
 }
 function evShow(e){
@@ -391,7 +396,7 @@ function evShow(e){
 }
 function evClose(){
   document.getElementById("ev").style.display="none";EV.cur=null;
-  EV.next=Date.now()+(180+Math.random()*180)*1000;
+  var fq=RC.c.freq;EV.next=Date.now()+(fq.min+Math.random()*(fq.max-fq.min))*1000;
 }
 function evTick(){
   var n=Date.now();
@@ -401,7 +406,7 @@ function evTick(){
     return;
   }
   if(n<EV.next||document.hidden||G.sh||document.getElementById("cfg").className=="on")return;
-  evShow(evPick());
+  var ep=evPick();if(ep)evShow(ep);else EV.next=n+60000;
 }
 document.getElementById("ev").addEventListener("click",function(e){
   var b=e.target.closest("button");if(!b||!EV.cur||EV.done)return;
@@ -757,6 +762,95 @@ function devRestore(){
   });
 }
 devRestore();
+
+/* ===== Eventos remotos: campanhas, ajustes e eventos novos vindos do servidor ===== */
+function rcClean(c){
+  var o={freq:{min:180,max:360},builtin:{},events:[],campaigns:[],notice:null};
+  if(!c||typeof c!=="object")return o;
+  function num(x,a,b,d){x=+x;return isFinite(x)?Math.min(b,Math.max(a,x)):d}
+  function str(x,n){return typeof x==="string"?x.replace(/[\u0000-\u001f<>]/g,"").trim().slice(0,n):""}
+  function key(x,n){return str(x,n).replace(/[^A-Za-z0-9_-]/g,"")}
+  function fxs(l){var r=[];(Array.isArray(l)?l:[]).slice(0,4).forEach(function(f){
+    if(!f||typeof f!=="object")return;
+    if(f.t==="inc"||f.t==="tap")r.push({t:f.t,m:num(f.m,.1,20,1),s:num(f.s,1,3600,30)});
+    else if(f.t==="gain"||f.t==="loss")r.push({t:f.t,min:num(f.min,0,120,1)});
+    else if(f.t==="pearl")r.push({t:"pearl",n:Math.round(num(f.n,0,3,1))})});return r}
+  if(c.freq&&typeof c.freq==="object"){var a=num(c.freq.min,30,3600,180),b=num(c.freq.max,30,7200,360);o.freq={min:Math.min(a,b),max:Math.max(a,b)}}
+  if(c.builtin&&typeof c.builtin==="object"){Object.keys(c.builtin).slice(0,30).forEach(function(k){
+    var v=c.builtin[k],id=key(k,20);if(!id||!v||typeof v!=="object")return;
+    var e={};if(v.on===false)e.on=false;if(v.w!==undefined)e.w=num(v.w,0,100,10);o.builtin[id]=e})}
+  (Array.isArray(c.campaigns)?c.campaigns:[]).slice(0,10).forEach(function(k,i){
+    if(!k||typeof k!=="object")return;
+    var from=num(k.from,0,4e12,0),until=num(k.until,0,4e12,0);if(!(until>from))return;
+    o.campaigns.push({id:key(k.id,20)||"c"+i,text:str(k.text,80),from:from,until:until,inc:num(k.inc,.1,10,1),tap:num(k.tap,.1,10,1)})});
+  (Array.isArray(c.events)?c.events:[]).slice(0,20).forEach(function(e,i){
+    if(!e||typeof e!=="object")return;
+    var ch=(Array.isArray(e.ch)?e.ch:[]).slice(0,3).map(function(x){
+      if(!x||typeof x!=="object")return null;
+      var r={l:str(x.l,30)||"OK",cost:num(x.cost,0,120,0),fx:fxs(x.fx),msg:str(x.msg,100)};
+      if(Array.isArray(x.rnd))r.rnd=x.rnd.slice(0,3).map(function(y){y=y||{};return{p:num(y.p,0,1,.5),fx:fxs(y.fx),msg:str(y.msg,100)}});
+      return r}).filter(Boolean);
+    if(!ch.length)return;
+    o.events.push({id:key(e.id,20)||"e"+i,on:e.on!==false,w:num(e.w,0,100,10),min:Math.round(num(e.min,0,24,0)),max:Math.round(num(e.max,0,24,24)),ic:str(e.ic,8)||"🎲",t:str(e.t,40)||"Evento",d:str(e.d,120),ch:ch})});
+  if(c.notice&&typeof c.notice==="object"&&typeof c.notice.text==="string"&&c.notice.text.trim()){
+    o.notice={id:key(c.notice.id,20)||"n1",text:str(c.notice.text,120),until:num(c.notice.until,0,4e12,0)}}
+  return o;
+}
+var RC={c:rcClean(null),ev:[],off:0};
+function rcNow(){return Date.now()+(RC?RC.off:0)}
+function rcM(k){if(!RC)return 1;var m=1,n=rcNow();RC.c.campaigns.forEach(function(x){if(n>=x.from&&n<x.until)m*=x[k]});return m}
+function rcRem(ms){var h=Math.floor(ms/36e5),m=Math.floor(ms%36e5/6e4);return h>=24?Math.floor(h/24)+"d "+h%24+"h":h?h+"h "+m+"min":m+"min"}
+function rcBo(o){
+  if(!RC)return;var n=rcNow();
+  RC.c.campaigns.forEach(function(x){if(n>=x.from&&n<x.until){
+    var p=[];if(x.inc!=1)p.push("renda ×"+String(x.inc).replace(".",","));if(x.tap!=1)p.push("toque ×"+String(x.tap).replace(".",","));
+    o.push("🎉 "+(x.text||"Campanha")+" ("+(p.length?p.join(", ")+", ":"")+rcRem(x.until-n)+")")}});
+}
+function rcFx(l,c){
+  l.forEach(function(f){
+    if(f.t=="inc")setEf("inc",f.m,f.s);
+    else if(f.t=="tap")setEf("tap",f.m,f.s);
+    else if(f.t=="gain")G.m+=Math.max(c.p*f.min*60,c.k*15*f.min);
+    else if(f.t=="loss")G.m-=Math.min(G.m,c.p*f.min*60);
+    else if(f.t=="pearl"){G.pe+=f.n;G.st.pl+=f.n}
+  });
+}
+function rcEv(e){
+  return{id:e.id,w:e.w,min:e.min,max:e.max,ic:esc(e.ic),t:esc(e.t),d:esc(e.d),remote:1,ch:e.ch.map(function(x){
+    return{
+      l:function(c){return esc(x.l)+(x.cost?" (R$ "+fmt(c.p*x.cost*60)+")":"")},
+      need:x.cost?function(c){return c.p*x.cost*60}:undefined,
+      f:function(c){
+        if(x.cost)G.m-=c.p*x.cost*60;
+        var m=x.msg;rcFx(x.fx,c);
+        if(x.rnd&&x.rnd.length){var r=Math.random(),a=0;for(var i=0;i<x.rnd.length;i++){a+=x.rnd[i].p;if(r<a){rcFx(x.rnd[i].fx,c);m=x.rnd[i].msg||m;break}}}
+        return m||"Feito!";
+      }
+    }})};
+}
+function rcNotice(){
+  var n=RC.c.notice;if(!n)return;
+  if(n.until&&rcNow()>n.until)return;
+  var seen="";try{seen=localStorage.getItem("camarao_rcn")||""}catch(e){}
+  if(seen==n.id)return;
+  try{localStorage.setItem("camarao_rcn",n.id)}catch(e){}
+  toast("📣 "+n.text);
+}
+function rcApply(j,off){RC.c=rcClean(j);RC.off=off;RC.ev=RC.c.events.filter(function(e){return e.on}).map(rcEv);rcNotice()}
+function rcFetch(){
+  if(!window.RC_URL)return;
+  var ctl=window.AbortController?new AbortController():null,tm=setTimeout(function(){if(ctl)ctl.abort()},6000);
+  fetch(String(window.RC_URL).replace(/\/$/,"")+"/config",{cache:"no-store",signal:ctl?ctl.signal:undefined})
+    .then(function(r){return r.json()})
+    .then(function(j){
+      clearTimeout(tm);
+      var off=+j.now>0?(+j.now-Date.now()):0;if(Math.abs(off)>7*864e5)off=0;
+      try{localStorage.setItem("camarao_rc",JSON.stringify(j))}catch(e){}
+      rcApply(j,off);render();
+    }).catch(function(){clearTimeout(tm)});
+}
+try{var rcj=JSON.parse(localStorage.getItem("camarao_rc"));if(rcj)rcApply(rcj,0)}catch(e){}
+if(window.RC_URL){rcFetch();setInterval(rcFetch,3e5);document.addEventListener("visibilitychange",function(){if(!document.hidden)rcFetch()})}
 render();
 </script>
 </body>
