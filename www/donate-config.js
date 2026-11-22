@@ -8,5 +8,13 @@ window.DON={
   "crv": "P-256",
   "x": "SUj9vtLijhE0jmuLEKbn1vb1mvr7xv0-Obfx0D9gfHs",
   "y": "O8lAumr1C8G9MCByVi8O8ICMJT_HAz4uZ9iX0FAY_3I"
- }
+ },
+ "pubs": [
+  {
+   "kty": "EC",
+   "crv": "P-256",
+   "x": "Cqwb9fJkliQwRKr0eqdfvWLTiIa5gqUanhLO7iquDkg",
+   "y": "E1AxyJFaaX2bkBMBwAGwVEHPApKsJeLN_JjjO754uo4"
+  }
+ ]
 };

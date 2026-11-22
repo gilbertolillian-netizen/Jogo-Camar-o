@@ -583,6 +583,18 @@ function pixPayload(v){
   return p+crc16(p);
 }
 function b64u(s){s=s.replace(/-/g,"+").replace(/_/g,"/");while(s.length%4)s+="=";var b=atob(s),a=new Uint8Array(b.length);for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a}
+function sigOk(pre,body,sig){
+  var sub=window.crypto&&window.crypto.subtle;if(!sub)return Promise.resolve(false);
+  var ks=[DON.pub].concat(pre=="CAM1"?(DON.pubs||[]):[]),data=new TextEncoder().encode(body),s;
+  try{s=b64u(sig)}catch(e){return Promise.resolve(false)}
+  var i=0;
+  function next(){
+    if(i>=ks.length)return Promise.resolve(false);
+    var k=ks[i++];
+    return sub.importKey("jwk",k,{name:"ECDSA",namedCurve:"P-256"},false,["verify"]).then(function(ck){return sub.verify({name:"ECDSA",hash:"SHA-256"},ck,s,data)}).then(function(v){return v?true:next()}).catch(next);
+  }
+  return next();
+}
 function idHash(s){var h=7;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))%1000003;return h}
 function redeemCode(code){
   return new Promise(function(ok){
@@ -592,9 +604,7 @@ function redeemCode(code){
       var pr=p[1].split("-"),id=pr[0],dia=+pr[1];
       if(!id||!(dia>0))return ok("Código inválido.");
       var sub=window.crypto&&window.crypto.subtle;if(!sub)return ok("Este aparelho não consegue validar o código (precisa de conexão segura).");
-      sub.importKey("jwk",DON.pub,{name:"ECDSA",namedCurve:"P-256"},false,["verify"]).then(function(k){
-        return sub.verify({name:"ECDSA",hash:"SHA-256"},k,b64u(p[2]),new TextEncoder().encode(p[0]+"."+p[1]))
-      }).then(function(v){
+      sigOk(p[0],p[0]+"."+p[1],p[2]).then(function(v){
         if(!v)return ok("Código inválido.");
         if(p[0]=="DEV1"){
           if(Date.now()/864e5-dia>2)return ok("Este código expirou (vale por 2 dias).");
@@ -627,7 +637,8 @@ function donRender(){
   var v=DONV,c=String(DON.contato||""),h='<b>💛 Apoiar o projeto</b>';
   h+='<div class="rs" style="text-align:left">Este jogo é feito por uma pessoa só. Seu apoio ajuda a pagar hospedagem e conta de desenvolvedor, e financia novos estágios, eventos e melhorias.</div>';
   h+='<div class="rs" style="text-align:left">🎁 Quem apoiar com <b>R$ 5 ou mais</b> recebe <b>renda ×2 por 7 dias</b> e uma <b>skin sorteada</b> para os ícones das fases. São 4 skins no total, e cada novo apoio sorteia uma que você ainda não tem.</div>';
-  h+='<div class="row"><small>1. Escolha o valor e pague pelo Pix</small><div class="sn">'+[5,10,20,0].map(function(x){return '<button data-v="'+x+'"'+(x==v?' class="on"':'')+'>'+(x?"R$ "+x:"Outro valor")+'</button>'}).join("")+'</div>';
+  h+=pxHtml();
+  h+='<div class="row"><small>'+(pxOn()?"Ou pague direto na chave Pix e receba o código manualmente":"1. Escolha o valor e pague pelo Pix")+'</small><div class="sn">'+[5,10,20,0].map(function(x){return '<button data-v="'+x+'"'+(x==v?' class="on"':'')+'>'+(x?"R$ "+x:"Outro valor")+'</button>'}).join("")+'</div>';
   h+='<textarea readonly rows="3">'+pixPayload(v)+'</textarea><button class="wide" id="donc">📋 Copiar Pix copia e cola</button><button class="wide" id="donk">🔑 Copiar a chave Pix</button></div>';
   h+='<div class="row"><small>2. Receba o seu código</small><div class="rs" style="text-align:left">Depois de pagar, envie o comprovante para: <b>'+(/^https?:/.test(c)?'<a href="'+esc(c)+'" target="_blank" rel="noopener">'+esc(c)+'</a>':esc(c))+'</b>. Você recebe um código de apoiador.</div></div>';
   h+='<div class="row"><small>3. Resgate o código</small><input id="donin" placeholder="Cole o código aqui" autocomplete="off"><button class="wide" id="donr">Resgatar</button>'+(DONM?'<div class="rs" style="text-align:left">'+DONM+'</div>':'')+'</div>';
@@ -646,6 +657,9 @@ function donRender(){
 function donOpen(){document.getElementById("cfg").className="";DONM="";donRender();document.getElementById("don").className="on"}
 document.getElementById("donbox").addEventListener("click",function(e){
   var t=e.target.closest("button");if(!t)return;
+  if(t.dataset.px!==undefined){pxStart(+t.dataset.px);return}
+  if(t.id=="pxc"){copyTxt(PX.qr);return}
+  if(t.id=="pxx"){pxCancel();return}
   if(t.dataset.v!==undefined){DONV=+t.dataset.v;donRender();return}
   if(t.dataset.sk!==undefined){if(t.disabled)return;G.dn.sel=+t.dataset.sk;save();skinApply();donRender();return}
   if(t.id=="devb"){G.dn.devon=G.dn.devon?0:1;save();donRender();render();return}
@@ -851,6 +865,71 @@ function rcFetch(){
 }
 try{var rcj=JSON.parse(localStorage.getItem("camarao_rc"));if(rcj)rcApply(rcj,0)}catch(e){}
 if(window.RC_URL){rcFetch();setInterval(rcFetch,3e5);document.addEventListener("visibilitychange",function(){if(!document.hidden)rcFetch()})}
+
+/* ===== Pix automático: o jogo pede o Pix ao servidor, acompanha o pagamento e resgata os códigos sozinho ===== */
+var PX={s:"idle",v:0,id:"",qr:"",qr64:"",msg:""},pxBusy=0;
+function pxOn(){return !!window.RC_URL}
+function pxUrl(p){return String(window.RC_URL||"").replace(/\/+$/,"")+p}
+function pxRender(){if(window.DON&&DON.pix)donRender()}
+function pxClear(){try{localStorage.removeItem("camarao_pix")}catch(e){}}
+function pxSet(s,o){PX={s:s,v:(o&&o.v)||0,id:(o&&o.id)||"",qr:(o&&o.qr)||"",qr64:(o&&o.qr64)||"",msg:(o&&o.msg)||""}}
+function pxHtml(){
+  if(!pxOn())return"";
+  var h='<div class="row"><small>⚡ Pix automático: o código chega sozinho</small>';
+  if(PX.s=="creating")h+='<div class="rs">Criando o seu Pix…</div>';
+  else if(PX.s=="redeeming")h+='<div class="rs">Pagamento confirmado! Aplicando os seus códigos…</div>';
+  else if(PX.s=="wait"){
+    if(PX.qr){
+      h+='<div class="rs" style="text-align:left">Pague <b>R$ '+esc(PX.v)+'</b> com o Pix abaixo. Esta tela confirma sozinha. Se você fechar o jogo, ele continua conferindo quando abrir de novo.</div>';
+      h+='<textarea readonly rows="3">'+esc(PX.qr)+'</textarea><button class="wide" id="pxc">📋 Copiar Pix copia e cola</button>';
+      if(PX.qr64&&/^[A-Za-z0-9+\/=]+$/.test(PX.qr64))h+='<div style="text-align:center;margin-top:8px"><img alt="QR Code do Pix" width="150" height="150" src="data:image/png;base64,'+PX.qr64+'"></div>';
+    }else h+='<div class="rs" style="text-align:left">Há um pagamento'+(PX.v?' de <b>R$ '+esc(PX.v)+'</b>':'')+' aguardando confirmação. Se você já pagou, é só esperar alguns instantes.</div>';
+    h+='<div class="rs">⏳ Aguardando o pagamento…</div><button class="wide" id="pxx">Cancelar</button>';
+  }else h+='<div class="sn">'+[[5,"R$ 5 · 1 código"],[10,"R$ 10 · 2 códigos"],[20,"R$ 20 · 4 códigos"]].map(function(x){return '<button data-px="'+x[0]+'">'+x[1]+'</button>'}).join("")+'</div>';
+  if(PX.msg)h+='<div class="rs" style="text-align:left">'+esc(PX.msg)+'</div>';
+  return h+'</div>';
+}
+function pxStart(v){
+  if(!pxOn()||PX.s=="creating"||PX.s=="wait"||PX.s=="redeeming")return;
+  pxSet("creating",{v:v});pxRender();
+  fetch(pxUrl("/pix"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({valor:v})})
+    .then(function(r){return r.json().then(function(j){return{ok:r.ok,j:j||{}}})})
+    .then(function(x){
+      var j=x.j;
+      if(!x.ok||!/^[a-f0-9]{20}$/.test(String(j.id||""))||typeof j.qr!=="string"||j.qr.length>1000){pxSet("error",{v:v,msg:(typeof j.erro==="string"&&j.erro)||"Não consegui criar o Pix agora. Tente de novo."});pxRender();return}
+      pxSet("wait",{v:v,id:j.id,qr:j.qr,qr64:typeof j.qr64==="string"?j.qr64:""});
+      try{localStorage.setItem("camarao_pix",JSON.stringify({id:j.id,v:v,t:Date.now()}))}catch(e){}
+      pxRender();
+    }).catch(function(){pxSet("error",{v:v,msg:"Sem conexão com o servidor. Tente de novo."});pxRender()});
+}
+function pxPoll(){
+  if(PX.s!="wait"||!PX.id||pxBusy||document.hidden||!pxOn())return;
+  pxBusy=1;
+  fetch(pxUrl("/pix/"+PX.id),{cache:"no-store"}).then(function(r){return r.json()}).then(function(j){
+    pxBusy=0;
+    if(j&&j.status=="paid"&&Array.isArray(j.codes)&&j.codes.length)pxPaid(j.codes.slice(0,8));
+    else if(j&&j.status=="expired"){pxClear();pxSet("error",{v:PX.v,msg:"O Pix expirou. Gere outro quando quiser."});pxRender()}
+    else if(j&&j.status=="failed"){pxClear();pxSet("error",{v:PX.v,msg:"Não foi possível confirmar esse pagamento. Se você pagou, fale comigo pelo contato informado."});pxRender()}
+  }).catch(function(){pxBusy=0});
+}
+function pxPaid(codes){
+  var v=PX.v;pxClear();pxSet("redeeming",{v:v});pxRender();
+  var i=0,okc=0;
+  (function next(){
+    if(i>=codes.length){
+      pxSet("done",{v:v,msg:okc?"✅ Pagamento confirmado! "+okc+" código(s) aplicado(s): renda ×2 e skins. Obrigado pelo apoio! 💛":"Pagamento confirmado, mas os códigos não puderam ser aplicados. Fale comigo pelo contato informado."});
+      pxRender();toast(okc?"💛 Pagamento confirmado! Obrigado pelo apoio!":"⚠️ Pagamento confirmado, mas houve um problema com os códigos");return;
+    }
+    redeemCode(codes[i++]).then(function(m){if(String(m).slice(0,2)=="ok")okc++;next()});
+  })();
+}
+function pxCancel(){pxClear();pxSet("idle");pxRender()}
+try{
+  var pxj=JSON.parse(localStorage.getItem("camarao_pix"));
+  if(pxj&&pxOn()&&/^[a-f0-9]{20}$/.test(String(pxj.id))&&Date.now()-pxj.t<48*36e5)pxSet("wait",{v:+pxj.v||0,id:pxj.id});
+  else if(pxj)pxClear();
+}catch(e){}
+if(pxOn()){setInterval(pxPoll,5000);setTimeout(pxPoll,2500);document.addEventListener("visibilitychange",function(){if(!document.hidden)pxPoll()})}
 render();
 </script>
 </body>
